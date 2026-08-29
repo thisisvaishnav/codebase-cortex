@@ -1,0 +1,473 @@
+#!/usr/bin/env node
+/**
+ * cortex - thin CLI wrapper over the TrueForge REST API.
+ *
+ * TrueForge v0.1.4 ships no CLI runner: `npx @truefoundry/trueforge` only starts
+ * a server (see docs/TRUEFORGE-API-FINDINGS.md). This wrapper gives CI and the
+ * demo a one-line invocation by driving /api/v1 directly.
+ *
+ * Usage:
+ *   cortex detect  --pr <n> | --issue <n>
+ *   cortex ingest  --pr <n> [--author <login>]
+ *   cortex explain --question "<text>"
+ *   cortex setup                          # register providers/MCP/skills/agent only
+ *   cortex doctor                         # check server + configuration health
+ *
+ * Env:
+ *   TF_URL          TrueForge base URL          (default http://localhost:8790)
+ *   TF_API_KEY      bearer token, if auth is on (optional in standalone mode)
+ *   CORTEX_MODEL    model FQN override          (default: best available)
+ *   CORTEX_VECTOR_URL  cortex-vector MCP URL    (default http://localhost:9001/mcp)
+ *   GITHUB_TOKEN    forwarded to the github MCP server
+ *   GITHUB_REPOSITORY  owner/repo               (auto-set in GitHub Actions)
+ *   SKILL_REPO_URL  git repo skills are cloned from (default: public repo)
+ *   SKILL_REPO_REF  branch/tag/commit for skills (default main)
+ */
+
+'use strict';
+
+const TF_URL = (process.env.TF_URL || 'http://localhost:8790').replace(/\/$/, '');
+const API = `${TF_URL}/api/v1`;
+const VECTOR_URL = process.env.CORTEX_VECTOR_URL || 'http://localhost:9001/mcp';
+const AGENT_NAME = 'codebase-cortex';
+
+/** Models we prefer, best first. Falls back to whatever is configured. */
+const MODEL_PREFERENCE = [
+  'anthropic/claude-sonnet-5',
+  'anthropic/claude-opus-5',
+  'anthropic/claude-sonnet-4-6',
+  'openai/gpt-5-5',
+  'google-gemini/gemini-3-1-pro-preview',
+];
+
+// ---------------------------------------------------------------- http helpers
+
+function authHeaders() {
+  const h = { 'content-type': 'application/json' };
+  if (process.env.TF_API_KEY) h.authorization = `Bearer ${process.env.TF_API_KEY}`;
+  return h;
+}
+
+async function api(method, path, body) {
+  const res = await fetch(`${API}${path}`, {
+    method,
+    headers: authHeaders(),
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  const text = await res.text();
+  let parsed = null;
+  try {
+    parsed = text ? JSON.parse(text) : null;
+  } catch {
+    /* non-JSON response; keep the raw text for the error message */
+  }
+  if (!res.ok) {
+    const detail = parsed ? JSON.stringify(parsed) : text.slice(0, 400);
+    throw new Error(`${method} ${path} -> ${res.status} ${res.statusText}\n${detail}`);
+  }
+  return parsed;
+}
+
+const log = (...a) => console.error('[cortex]', ...a);
+const die = (msg) => {
+  console.error(`[cortex] error: ${msg}`);
+  process.exit(1);
+};
+
+// ---------------------------------------------------------------- setup phase
+
+async function waitForServer(timeoutMs = 90_000) {
+  const deadline = Date.now() + timeoutMs;
+  let lastErr;
+  while (Date.now() < deadline) {
+    try {
+      await api('GET', '/capabilities');
+      return;
+    } catch (e) {
+      lastErr = e;
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+  }
+  die(
+    `TrueForge not reachable at ${TF_URL} after ${Math.round(timeoutMs / 1000)}s.\n` +
+      `Start it with:  npx @truefoundry/trueforge --port 8790 &\n` +
+      `Last error: ${lastErr && lastErr.message}`,
+  );
+}
+
+/** Pick a model FQN: explicit override > preference order > first configured. */
+async function resolveModel() {
+  const { data = [] } = await api('GET', '/models');
+  const available = data.map((m) => m.name);
+
+  if (process.env.CORTEX_MODEL) {
+    if (!available.includes(process.env.CORTEX_MODEL)) {
+      log(
+        `warn: CORTEX_MODEL="${process.env.CORTEX_MODEL}" is not configured. ` +
+          `Configured: ${available.join(', ') || '(none)'}`,
+      );
+    }
+    return process.env.CORTEX_MODEL;
+  }
+  const preferred = MODEL_PREFERENCE.find((m) => available.includes(m));
+  if (preferred) return preferred;
+  if (available.length) {
+    log(`note: none of the preferred models are configured; using ${available[0]}`);
+    return available[0];
+  }
+  die(
+    'No model providers configured in TrueForge.\n' +
+      `Add one at ${TF_URL} (Settings -> Models), or POST /api/v1/settings/model-providers.`,
+  );
+}
+
+/** Register the cortex-vector remote MCP server if it is not already present. */
+async function ensureVectorMcp() {
+  const { data = [] } = await api('GET', '/settings/mcp-servers');
+  if (data.some((s) => s.name === 'cortex-vector')) {
+    log('mcp: cortex-vector already registered');
+    return true;
+  }
+  try {
+    await api('POST', '/settings/mcp-servers', {
+      manifest: {
+        type: 'remote',
+        name: 'cortex-vector',
+        url: VECTOR_URL,
+        description: 'ADR vector memory: searchDecisions, upsertDecision, updateStatus.',
+      },
+    });
+    log(`mcp: registered cortex-vector -> ${VECTOR_URL}`);
+    return true;
+  } catch (e) {
+    log(`warn: could not register cortex-vector MCP (${e.message.split('\n')[0]})`);
+    log('warn: continuing without vector memory - retrieval will be degraded');
+    return false;
+  }
+}
+
+/** Register the built-in remote github MCP server if not already present. */
+async function ensureGithubMcp() {
+  const { data = [] } = await api('GET', '/settings/mcp-servers');
+  if (data.some((s) => s.name === 'github')) {
+    log('mcp: github already registered');
+    return true;
+  }
+  if (!process.env.GITHUB_TOKEN) {
+    log('warn: GITHUB_TOKEN unset - skipping github MCP registration');
+    return false;
+  }
+  try {
+    await api('POST', '/settings/mcp-servers', {
+      manifest: {
+        type: 'remote',
+        name: 'github',
+        url: 'https://api.githubcopilot.com/mcp/',
+        description: 'GitHub PRs, diffs, issues, comments, CODEOWNERS.',
+        auth: { type: 'header', headers: { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } },
+      },
+    });
+    log('mcp: registered github');
+    return true;
+  } catch (e) {
+    log(`warn: could not register github MCP (${e.message.split('\n')[0]})`);
+    return false;
+  }
+}
+
+/** Register each skills/<name>/SKILL.md as a git-backed skill.
+ *
+ * TrueForge's SkillType enum is only "git": skills are cloned server-side from
+ * SKILL_REPO_URL at ref SKILL_REPO_REF. The ingest workflow provisions the same
+ * manifest from ${{ github.server_url }}/${{ github.repository }}; locally the
+ * demo defaults to the public repo.
+ */
+async function ensureSkills() {
+  const names = [
+    'cortex-detect',
+    'cortex-ingest',
+    'cortex-notify',
+    'cortex-explain',
+    'qodo-get-rules',
+    'qodo-pr-resolver',
+  ];
+  const repoUrl = process.env.SKILL_REPO_URL || 'https://github.com/thisisvaishnav/codebase-cortex.git';
+  const repoRef = process.env.SKILL_REPO_REF || 'main';
+  let existing = [];
+  try {
+    ({ data: existing = [] } = await api('GET', '/settings/skills'));
+  } catch {
+    /* endpoint may be empty on a fresh install */
+  }
+  const have = new Set(existing.map((s) => s.name));
+  const registered = [];
+  for (const name of names) {
+    if (have.has(name)) {
+      registered.push(name);
+      continue;
+    }
+    try {
+      await api('POST', '/settings/skills', {
+        manifest: {
+          type: 'git',
+          name,
+          url: repoUrl,
+          path: `skills/${name}`,
+          ref: repoRef,
+          description: `Codebase Cortex skill: ${name}`,
+        },
+      });
+      registered.push(name);
+    } catch (e) {
+      log(`warn: skill "${name}" not registered (${e.message.split('\n')[0]})`);
+    }
+  }
+  log(`skills: ${registered.length}/${names.length} available`);
+  return registered;
+}
+
+/** Create or update the saved codebase-cortex agent from agent.json. */
+async function ensureAgent({ model, skills, mcpNames }) {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const specPath = path.resolve(__dirname, '..', 'agent.json');
+  if (!fs.existsSync(specPath)) die(`agent.json not found at ${specPath}`);
+
+  const file = JSON.parse(fs.readFileSync(specPath, 'utf8'));
+  const manifest = file.manifest;
+  if (!manifest) die('agent.json must have a "manifest" key holding the AgentSpec');
+
+  // Reconcile the declared spec with what this environment can actually provide.
+  manifest.model = { ...manifest.model, name: model };
+  manifest.skills = skills.map((name) => ({ name }));
+  manifest.mcp_servers = (manifest.mcp_servers || []).filter((s) => mcpNames.includes(s.name));
+
+  const { data = [] } = await api('GET', '/agents');
+  const found = data.find((a) => a.name === AGENT_NAME);
+  if (found) {
+    await api('PUT', `/agents/${encodeURIComponent(found.id || AGENT_NAME)}`, { manifest });
+    log(`agent: updated "${AGENT_NAME}" (model ${model})`);
+  } else {
+    await api('POST', '/agents', { name: AGENT_NAME, manifest });
+    log(`agent: created "${AGENT_NAME}" (model ${model})`);
+  }
+  return manifest;
+}
+
+async function setup() {
+  await waitForServer();
+  const model = await resolveModel();
+  const gh = await ensureGithubMcp();
+  const vec = await ensureVectorMcp();
+  const mcpNames = [gh && 'github', vec && 'cortex-vector'].filter(Boolean);
+  const skills = await ensureSkills();
+  const manifest = await ensureAgent({ model, skills, mcpNames });
+  return { model, manifest, mcpNames, skills };
+}
+
+// ---------------------------------------------------------------- run a turn
+
+/** Create a session, post one turn, stream it to completion, return the text. */
+async function runTurn(prompt) {
+  const session = await api('POST', '/sessions', { agent: { name: AGENT_NAME } });
+  const sid = session.id || (session.session && session.session.id);
+  if (!sid) die(`could not read session id from: ${JSON.stringify(session).slice(0, 300)}`);
+  log(`session: ${sid}`);
+
+  const turn = await api('POST', `/sessions/${sid}/turns`, {
+    input: [{ type: 'user.message', content: prompt }],
+    stream: false,
+  });
+  const tid = turn.turn_id || turn.id;
+  log(`turn: ${tid}`);
+
+  const final = await pollTurn(sid, tid);
+  return { sessionId: sid, turnId: tid, turn: final };
+}
+
+/** Poll a turn until it leaves the running state. */
+async function pollTurn(sid, tid, timeoutMs = 15 * 60_000) {
+  const deadline = Date.now() + timeoutMs;
+  let lastStatus = '';
+  while (Date.now() < deadline) {
+    const res = await api('GET', `/sessions/${sid}/turns/${tid}`);
+    const turn = res.turn || res;
+    const state = turn.state || {};
+    const status = state.type || state.status || 'unknown';
+    if (status !== lastStatus) {
+      log(`state: ${status}`);
+      lastStatus = status;
+    }
+    if (/done|complete|succeed/i.test(status)) return turn;
+    if (/error|fail/i.test(status)) {
+      die(`turn failed: ${JSON.stringify(state).slice(0, 600)}`);
+    }
+    if (/cancel/i.test(status)) die('turn was cancelled');
+    await new Promise((r) => setTimeout(r, 3000));
+  }
+  die(`turn did not finish within ${Math.round(timeoutMs / 60000)} minutes`);
+}
+
+/** Best-effort extraction of assistant text from a finished turn. */
+function turnText(turn) {
+  const out = [];
+  const walk = (node) => {
+    if (!node || typeof node !== 'object') return;
+    if (Array.isArray(node)) return node.forEach(walk);
+    if (typeof node.content === 'string' && node.content.trim()) out.push(node.content);
+    for (const v of Object.values(node)) if (v && typeof v === 'object') walk(v);
+  };
+  walk(turn.output || turn.messages || turn);
+  return out.join('\n\n').trim();
+}
+
+// ---------------------------------------------------------------- prompts
+
+function repoSlug() {
+  return process.env.GITHUB_REPOSITORY || '<owner/repo>';
+}
+
+const PROMPTS = {
+  detectPr: (pr) => `Run an architectural audit on pull request #${pr} of ${repoSlug()}.
+
+1. Run the \`qodo-get-rules\` skill to load repository standards.
+2. Follow the \`cortex-detect\` skill exactly: read the PR diff via the github MCP,
+   run Stage 1 dense retrieval against \`cortex-vector\`, then Stage 2 invariant reasoning.
+3. If confidence >= 0.80, follow \`cortex-notify\` to resolve .github/CODEOWNERS plus the
+   violated ADR's author and upsert a single escalation comment carrying the marker
+   <!-- codebase-cortex:pr-analysis -->.
+4. If 0.60-0.79, upsert an advisory note instead. If < 0.60, upsert a clean audit badge.
+
+Report the final JSON verdict from cortex-detect as your last message.`,
+
+  detectIssue: (issue) => `Run a pre-flight architectural scan on issue #${issue} of ${repoSlug()}.
+
+1. Read the issue title and body via the github MCP.
+2. Query \`cortex-vector\` for ADRs semantically related to the proposal.
+3. If a related ACTIVE ADR exists, upsert one issue comment (marker
+   <!-- codebase-cortex:pr-analysis -->) summarising the prior decision, its author and
+   its rationale, so the contributor sees the history before writing code.
+
+Report which ADRs matched and what you posted.`,
+
+  ingest: (pr, author) => `Pull request #${pr} of ${repoSlug()} was just merged${
+    author ? ` by @${author}` : ''
+  }.
+
+Follow the \`cortex-ingest\` skill exactly:
+1. Read the merged PR body. If it contains the "Codebase Cortex - Decision Record" template,
+   parse its fields. Otherwise fall back to extracting invariants from the merged diff.
+2. If this is NOT an architectural decision, stop and say so - do not create an ADR.
+3. Otherwise write docs/adr/ADR-<next-id>-<slug>.md and upsert it into \`cortex-vector\`
+   with status ACTIVE.
+4. If it supersedes a prior ADR, set that ADR's status to SUPERSEDED and trigger
+   \`cortex-notify\` for a drift alert.
+5. Post a confirmation comment on the PR thread.
+
+Report the ADR id you created, or state clearly that no ADR was warranted.`,
+
+  explain: (q) => `A developer asks: "${q}"
+
+Follow the \`cortex-explain\` skill: search \`cortex-vector\` across both ACTIVE and
+SUPERSEDED ADRs, trace lineage where a decision was superseded, and answer with the
+decision, its rationale, the alternatives rejected, the author, the date, and the current
+status. Cite ADR ids. If nothing relevant is indexed, say so plainly.`,
+};
+
+// ---------------------------------------------------------------- arg parsing
+
+function parseArgs(argv) {
+  const out = { _: [] };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a.startsWith('--')) {
+      const key = a.slice(2);
+      const next = argv[i + 1];
+      if (next === undefined || next.startsWith('--')) out[key] = true;
+      else {
+        out[key] = next;
+        i++;
+      }
+    } else out._.push(a);
+  }
+  return out;
+}
+
+const USAGE = `cortex - drive the Codebase Cortex agent on TrueForge
+
+Commands:
+  cortex detect  --pr <n>            audit a pull request
+  cortex detect  --issue <n>         pre-flight scan an issue
+  cortex ingest  --pr <n> [--author <login>]
+  cortex explain --question "<text>"
+  cortex setup                       register providers/MCP/skills/agent only
+  cortex doctor                      report server and configuration health
+
+Env: TF_URL, TF_API_KEY, CORTEX_MODEL, CORTEX_VECTOR_URL, GITHUB_TOKEN, GITHUB_REPOSITORY`;
+
+async function doctor() {
+  console.log(`TrueForge URL   ${TF_URL}`);
+  try {
+    await api('GET', '/capabilities');
+    console.log('server          reachable');
+  } catch (e) {
+    console.log(`server          UNREACHABLE (${e.message.split('\n')[0]})`);
+    console.log('\nStart it with:  npx @truefoundry/trueforge --port 8790 &');
+    process.exit(1);
+  }
+  const { data: models = [] } = await api('GET', '/models');
+  console.log(`models          ${models.length ? models.map((m) => m.name).join(', ') : 'NONE - add a provider'}`);
+  const { data: mcp = [] } = await api('GET', '/settings/mcp-servers');
+  console.log(`mcp servers     ${mcp.length ? mcp.map((s) => s.name).join(', ') : 'none'}`);
+  let skills = [];
+  try {
+    ({ data: skills = [] } = await api('GET', '/settings/skills'));
+  } catch {
+    /* ignore */
+  }
+  console.log(`skills          ${skills.length ? skills.map((s) => s.name).join(', ') : 'none'}`);
+  const { data: agents = [] } = await api('GET', '/agents');
+  console.log(`agents          ${agents.length ? agents.map((a) => a.name).join(', ') : 'none'}`);
+  console.log(`vector mcp url  ${VECTOR_URL}`);
+  console.log(`github token    ${process.env.GITHUB_TOKEN ? 'set' : 'NOT set'}`);
+}
+
+async function main() {
+  const argv = process.argv.slice(2);
+  const cmd = argv[0];
+  const args = parseArgs(argv.slice(1));
+
+  if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h') {
+    console.log(USAGE);
+    return;
+  }
+  if (cmd === 'doctor') return doctor();
+  if (cmd === 'setup') {
+    await setup();
+    log('setup complete');
+    return;
+  }
+
+  let prompt;
+  if (cmd === 'detect') {
+    if (args.pr) prompt = PROMPTS.detectPr(args.pr);
+    else if (args.issue) prompt = PROMPTS.detectIssue(args.issue);
+    else die('detect needs --pr <n> or --issue <n>');
+  } else if (cmd === 'ingest') {
+    if (!args.pr) die('ingest needs --pr <n>');
+    prompt = PROMPTS.ingest(args.pr, args.author);
+  } else if (cmd === 'explain') {
+    if (!args.question || args.question === true) die('explain needs --question "<text>"');
+    prompt = PROMPTS.explain(args.question);
+  } else {
+    die(`unknown command "${cmd}"\n\n${USAGE}`);
+  }
+
+  await setup();
+  const { turn } = await runTurn(prompt);
+  const text = turnText(turn);
+  // stdout carries the result; stderr carries progress. Keeps CI logs pipeable.
+  console.log(text || '(agent produced no text output)');
+}
+
+main().catch((e) => die(e.stack || e.message));

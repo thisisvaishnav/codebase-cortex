@@ -1,0 +1,158 @@
+{
+  "version": 1,
+  "description": "Architectural fitness rules for Codebase Cortex. Every rule traces to the ADR whose invariant it enforces, so a failure names the decision and (via docs/adr/ + .github/CODEOWNERS) the maintainer who owns it. Edit this file to add a rule; the check scripts contain no repository-specific knowledge.",
+  "settings": {
+    "exclude_paths": [
+      ".git",
+      "__pycache__",
+      ".venv",
+      "venv",
+      ".tox",
+      ".mypy_cache",
+      ".pytest_cache",
+      "node_modules",
+      "build",
+      "dist",
+      "sandbox/fitness/fixtures"
+    ]
+  },
+  "checks": {
+    "import_boundaries": {
+      "script": "check_import_boundaries.py",
+      "description": "Layering rules. Each rule names a set of files (scope) and the modules those files may not import (forbid).",
+      "layer_rules": [
+        {
+          "id": "core-independent-of-edges",
+          "adr": "ADR-001",
+          "description": "The domain core is the innermost layer; dependencies point inwards only.",
+          "scope": ["src/core/"],
+          "forbid": ["src.api", "src.web", "src.cli", "src.jobs"],
+          "allow": [],
+          "message": "src/core/ must not import the edge layer ({module}). Dependencies point inwards: move the shared type into src/core/ or invert the call with a port. [{adr}]"
+        },
+        {
+          "id": "core-free-of-web-frameworks",
+          "adr": "ADR-001",
+          "description": "Domain logic stays framework-agnostic so it is testable and transport-independent.",
+          "scope": ["src/core/"],
+          "forbid": ["fastapi", "flask", "django", "starlette", "werkzeug"],
+          "allow": [],
+          "message": "src/core/ must not depend on a web framework ({module}). Raise a domain error and let the edge layer translate it to HTTP. [{adr}]"
+        },
+        {
+          "id": "redis-only-inside-cache-layer",
+          "adr": "ADR-002",
+          "description": "ADR-002 makes the shared Redis cache a single layer; other layers depend on its interface, never on the driver.",
+          "scope": ["src/"],
+          "exclude": ["src/cache/"],
+          "forbid": ["redis", "aioredis", "redis.asyncio"],
+          "allow": [],
+          "message": "Only src/cache/ may talk to Redis directly ({module}). Depend on the src.cache session-store interface so the shared cache layer stays swappable. [{adr}]"
+        },
+        {
+          "id": "request-layer-no-direct-side-effect-imports",
+          "adr": "ADR-003",
+          "description": "ADR-003 requires billing and notification side-effects to travel over the event bus, not the request stack.",
+          "scope": ["src/api/", "src/web/"],
+          "forbid": ["src.billing.providers", "src.notifications.email", "src.notifications.sms"],
+          "allow": [],
+          "message": "The request layer must not import a side-effect implementation ({module}). Publish an event on src.events.bus and let an asynchronous consumer do the work. [{adr}]"
+        }
+      ]
+    },
+    "banned_dependencies": {
+      "script": "check_banned_dependencies.py",
+      "description": "Banned imports, banned call sites, and in-process state that would silently break an ADR invariant.",
+      "banned_modules": [
+        {
+          "id": "no-in-process-cache-libraries",
+          "adr": "ADR-002",
+          "description": "In-process cache libraries keep state in the worker's heap, which is exactly what ADR-002 forbids.",
+          "scope": ["src/"],
+          "modules": ["cachetools", "diskcache", "expiringdict", "lru", "lru_dict", "memoization"],
+          "message": "{module} keeps cached state inside the process; ADR-002 requires session state and token blacklists to live in the shared Redis cache layer, which survives a pod restart. [{adr}]"
+        },
+        {
+          "id": "no-synchronous-transports-in-side-effect-paths",
+          "adr": "ADR-003",
+          "description": "A synchronous transport in a billing or notification path re-creates the cascade-timeout failure ADR-003 was written to remove.",
+          "scope": ["src/api/", "src/web/", "src/billing/", "src/notifications/"],
+          "modules": ["requests", "httpx", "urllib.request", "http.client", "smtplib"],
+          "message": "{module} is a blocking transport. ADR-003 requires billing and notification side-effects to be emitted as events and retried asynchronously with exponential backoff. [{adr}]"
+        }
+      ],
+      "banned_calls": [
+        {
+          "id": "no-synchronous-side-effect-calls-in-request-layer",
+          "adr": "ADR-003",
+          "description": "Catches a blocking outbound call even when the transport was imported under an alias or re-exported.",
+          "scope": ["src/api/", "src/web/"],
+          "calls": [
+            "requests.post",
+            "requests.get",
+            "requests.put",
+            "requests.request",
+            "httpx.post",
+            "httpx.request",
+            "smtplib.SMTP",
+            "smtplib.SMTP_SSL",
+            "urlopen",
+            "*.urlopen"
+          ],
+          "message": "{call}() blocks the user-facing request on a third-party call. ADR-003: emit the event and return; a consumer performs the side-effect with retries. [{adr}]"
+        }
+      ],
+      "in_process_state": [
+        {
+          "id": "no-in-process-session-state",
+          "adr": "ADR-002",
+          "description": "ADR-002 invariant: session state and token blacklists MUST never be stored in process memory. Flags module-level and class-level mutable containers whose name identifies them as session or token-revocation state, plus memoised session lookups.",
+          "scope": ["src/"],
+          "exclude": [],
+          "scopes_checked": ["module", "class"],
+          "state_name_patterns": [
+            "(?i)session",
+            "(?i)(black|block|deny)_?list",
+            "(?i)revoked_?tokens?",
+            "(?i)token_?(cache|store)"
+          ],
+          "container_types": [
+            "dict",
+            "set",
+            "list",
+            "defaultdict",
+            "OrderedDict",
+            "Counter",
+            "WeakValueDictionary",
+            "Dict",
+            "Set",
+            "List",
+            "MutableMapping",
+            "MutableSet",
+            "TTLCache",
+            "LRUCache",
+            "LFUCache",
+            "ExpiringDict"
+          ],
+          "memoising_decorators": ["lru_cache", "cache", "cached", "memoize", "memoized"],
+          "message": "{name} holds {detail} in process memory. ADR-002 invariant: session state and token blacklists MUST live in the shared Redis cache layer - an in-process container is lost the moment the pod is rescheduled. [{adr}]"
+        }
+      ]
+    }
+  },
+  "self_test": {
+    "description": "run_all.py --self-test asserts the compliant tree is clean and that every rule listed here actually fires on the violating tree. It is how we prove the checks are not vacuous.",
+    "compliant_root": "fixtures/compliant",
+    "violating_root": "fixtures/violating",
+    "expect_violated_rules": [
+      "core-independent-of-edges",
+      "core-free-of-web-frameworks",
+      "redis-only-inside-cache-layer",
+      "request-layer-no-direct-side-effect-imports",
+      "no-in-process-cache-libraries",
+      "no-synchronous-transports-in-side-effect-paths",
+      "no-synchronous-side-effect-calls-in-request-layer",
+      "no-in-process-session-state"
+    ]
+  }
+}

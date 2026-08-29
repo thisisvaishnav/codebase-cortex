@@ -1,0 +1,7 @@
+# Global repo maintainers
+* @lead-maintainer @senior-dev
+
+# Architecture & Backend Core
+/src/core/ @senior-dev
+/src/cache/ @senior-dev
+/config/ @lead-maintainer

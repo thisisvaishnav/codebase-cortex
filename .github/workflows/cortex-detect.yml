@@ -1,0 +1,257 @@
+# Codebase Cortex - architectural guard on pull requests and new issues.
+#
+# WHY THIS LOOKS LIKE A SERVICE BRING-UP AND NOT A ONE-LINER:
+# TrueForge v0.1.4 ships NO CLI runner - `npx @truefoundry/trueforge` only accepts
+# --port/--help, and passing `run` fails with ERR_PARSE_ARGS_UNEXPECTED_POSITIONAL.
+# It is a REST server on :8790. Every step below that starts, waits for, or POSTs to
+# localhost:8790 exists because of that. See docs/TRUEFORGE-API-FINDINGS.md.
+name: Codebase Cortex - Architectural Guard & Qodo Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read # detect only reads the tree; ingest is the workflow that writes
+  pull-requests: write # upsert the single <!-- codebase-cortex:pr-analysis --> comment
+  issues: write # same marker comment on issue pre-flight scans
+
+# A re-push supersedes the previous audit of the same PR, so cancel the stale run.
+concurrency:
+  group: cortex-detect-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: true
+
+env:
+  # Pinned: every finding in docs/TRUEFORGE-API-FINDINGS.md was verified against 0.1.4.
+  TRUEFORGE_VERSION: 0.1.4
+  TF_URL: http://localhost:8790
+  TF_API_KEY: ${{ secrets.TF_API_KEY }} # optional: standalone mode runs with auth disabled
+  CORTEX_VECTOR_URL: http://localhost:9001/mcp
+  CORTEX_MODEL: ${{ vars.CORTEX_MODEL || 'anthropic/claude-sonnet-5' }}
+
+jobs:
+  cortex-detect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30 # bin/cortex polls a single turn for up to 15 minutes
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history: cortex-detect reasons over ADR lineage
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          # No `cache: npm` here: this repo has no package.json/lockfile at its root,
+          # and setup-node's built-in cache hard-fails without one. Cached manually below.
+
+      # npx downloads @truefoundry/trueforge on every cold run (~20-30s). Cache it.
+      - name: Cache npm / npx downloads
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+          key: ${{ runner.os }}-npm-trueforge-${{ env.TRUEFORGE_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          # `cache: pip` is deliberately omitted: it hard-fails when no requirements
+          # file matches, and cortex-vector-mcp/ may not be present yet. Cached below.
+
+      - name: Cache pip wheels
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('cortex-vector-mcp/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Make cortex CLI executable
+        run: chmod +x bin/cortex # git does not always preserve the mode bit
+
+      # TODO(task 2): cortex-vector-mcp/ is not in the repo yet. Both steps below are
+      # written defensively - they warn and continue so detect still runs (with degraded
+      # retrieval) until the vector service lands. Re-verify the entrypoint when it does.
+      - name: Install vector MCP dependencies
+        id: vector
+        run: |
+          set -euo pipefail
+          if [ ! -f cortex-vector-mcp/requirements.txt ]; then
+            echo "::warning title=No vector service::cortex-vector-mcp/requirements.txt not found - continuing without ADR vector memory. Stage 1 dense retrieval will be skipped."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          python -m pip install --upgrade pip
+          python -m pip install -r cortex-vector-mcp/requirements.txt
+          echo "present=true" >> "$GITHUB_OUTPUT"
+
+      - name: Start cortex-vector MCP service (port 9001)
+        if: steps.vector.outputs.present == 'true'
+        env:
+          CHROMA_API_KEY: ${{ secrets.CHROMA_API_KEY }} # only needed for Chroma Cloud
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} # embeddings, if the service uses them
+        run: |
+          set -euo pipefail
+          cd cortex-vector-mcp
+          if [ -f cortex_vector_mcp/server.py ]; then
+            APP=cortex_vector_mcp.server:app
+          elif [ -f server.py ]; then
+            APP=server:app
+          else
+            echo "::warning::no uvicorn entrypoint found under cortex-vector-mcp/ - skipping"
+            exit 0
+          fi
+          nohup python -m uvicorn "$APP" --host 127.0.0.1 --port 9001 \
+            > "$RUNNER_TEMP/cortex-vector.log" 2>&1 &
+          echo "started $APP (pid $!)"
+
+      # TrueForge is a server, not a CLI (findings §1). Start it detached; the readiness
+      # gate below is what makes a failure here diagnosable instead of a mystery timeout.
+      - name: Start TrueForge server (port 8790)
+        run: |
+          set -euo pipefail
+          nohup npx --yes "@truefoundry/trueforge@${TRUEFORGE_VERSION}" --port 8790 \
+            > "$RUNNER_TEMP/trueforge.log" 2>&1 &
+          echo "trueforge pid $!"
+
+      - name: Wait for services to become ready
+        run: |
+          set -uo pipefail
+          # GET /api/v1/capabilities is the same probe bin/cortex uses.
+          for i in $(seq 1 90); do
+            if curl -sf -m 3 "$TF_URL/api/v1/capabilities" >/dev/null; then
+              echo "trueforge ready after ${i}s"; break
+            fi
+            if [ "$i" -eq 90 ]; then
+              echo "::error title=TrueForge never came up::no response from $TF_URL after 90s"
+              tail -n 80 "$RUNNER_TEMP/trueforge.log" || true
+              exit 1
+            fi
+            sleep 1
+          done
+          # The vector service speaks MCP over Streamable HTTP: a bare GET legitimately
+          # answers 4xx, so treat *any* HTTP status as "listening".
+          if [ "${{ steps.vector.outputs.present }}" = "true" ]; then
+            for i in $(seq 1 45); do
+              code=$(curl -s -o /dev/null -m 3 -w '%{http_code}' "$CORTEX_VECTOR_URL" || echo 000)
+              if [ "$code" != "000" ]; then echo "cortex-vector ready (HTTP $code)"; break; fi
+              if [ "$i" -eq 45 ]; then
+                echo "::warning::cortex-vector did not answer on $CORTEX_VECTOR_URL - continuing without vector memory"
+                tail -n 40 "$RUNNER_TEMP/cortex-vector.log" || true
+              fi
+              sleep 1
+            done
+          fi
+
+      # A CI runner starts with an empty TrueForge SQLite DB, so model providers, MCP
+      # servers and skills must be provisioned on every run. Payload shapes verified
+      # against GET /api/v1/openapi.json (findings §2-§4): every settings POST takes a
+      # {"manifest": {...}} envelope, skills are git-backed only, MCP servers are remote
+      # only. Failures warn instead of aborting so `cortex doctor` can report the truth.
+      - name: Provision TrueForge (model provider, MCP servers, skills)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # api.githubcopilot.com/mcp/ generally needs a PAT; the ephemeral Actions token
+          # may be rejected. Set CORTEX_GITHUB_PAT to override. See workflows/README.md.
+          GITHUB_MCP_TOKEN: ${{ secrets.CORTEX_GITHUB_PAT || secrets.GITHUB_TOKEN }}
+          # Skills are cloned by TrueForge from a git ref, so they must come from a ref
+          # that exists on the remote. The default branch is used deliberately: audit
+          # instructions should be the trusted ones, not a PR's own modified copies.
+          SKILL_REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+          SKILL_REF: ${{ github.event.repository.default_branch }}
+        run: |
+          set -uo pipefail
+          API="$TF_URL/api/v1"
+          HDRS=(-H 'content-type: application/json')
+          if [ -n "${TF_API_KEY:-}" ]; then HDRS+=(-H "authorization: Bearer $TF_API_KEY"); fi
+
+          post() { # $1 = path, $2 = json body
+            code=$(curl -sS -o "$RUNNER_TEMP/post.out" -m 30 -w '%{http_code}' \
+              -X POST "$API$1" "${HDRS[@]}" -d "$2" || echo 000)
+            if [ "$code" -ge 400 ] 2>/dev/null || [ "$code" = "000" ]; then
+              echo "::warning::POST $1 -> $code $(head -c 300 "$RUNNER_TEMP/post.out" 2>/dev/null)"
+              return 1
+            fi
+            echo "POST $1 -> $code"
+          }
+
+          if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
+            post /settings/model-providers "$(jq -nc --arg k "$ANTHROPIC_API_KEY" \
+              '{manifest:{type:"anthropic",auth:{api_key:$k},models:[
+                 {model_id:"claude-sonnet-5",name:"claude-sonnet-5",
+                  properties:{context_length:1000000,max_output_tokens:128000}}]}}')" || true
+          fi
+          if [ -n "${OPENAI_API_KEY:-}" ]; then
+            post /settings/model-providers "$(jq -nc --arg k "$OPENAI_API_KEY" \
+              '{manifest:{type:"openai",auth:{api_key:$k},models:[
+                 {model_id:"gpt-5.5",name:"gpt-5-5",
+                  properties:{context_length:1050000,max_output_tokens:128000}}]}}')" || true
+          fi
+          if [ -z "${ANTHROPIC_API_KEY:-}${OPENAI_API_KEY:-}" ]; then
+            echo "::error title=No model provider secret::set ANTHROPIC_API_KEY or OPENAI_API_KEY"
+            exit 1
+          fi
+
+          # Only remote MCP transports exist (findings §4); GitHub's remote MCP covers
+          # diffs, comments, issues and CODEOWNERS.
+          post /settings/mcp-servers "$(jq -nc --arg t "$GITHUB_MCP_TOKEN" \
+            '{manifest:{type:"remote",name:"github",url:"https://api.githubcopilot.com/mcp/",
+               description:"GitHub PRs, diffs, issues, comments, CODEOWNERS.",
+               auth:{type:"header",headers:{Authorization:("Bearer "+$t)}}}}')" || true
+          post /settings/mcp-servers "$(jq -nc --arg u "$CORTEX_VECTOR_URL" \
+            '{manifest:{type:"remote",name:"cortex-vector",url:$u,
+               description:"ADR vector memory: searchDecisions, upsertDecision, updateStatus."}}')" || true
+
+          for s in cortex-detect cortex-ingest cortex-notify cortex-explain qodo-get-rules qodo-pr-resolver; do
+            post /settings/skills "$(jq -nc --arg n "$s" --arg u "$SKILL_REPO_URL" --arg r "$SKILL_REF" \
+              '{manifest:{type:"git",name:$n,url:$u,path:("skills/"+$n),ref:$r,
+                 description:("Codebase Cortex skill: "+$n)}}')" || true
+          done
+
+      # Qodo judges code quality; Cortex judges architectural integrity. Independent.
+      - name: Run Qodo Code Review
+        if: github.event_name == 'pull_request'
+        uses: qodo-ai/qodo-action@v1
+        continue-on-error: true
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Printed before the real command so a failed audit is diagnosable from the log
+      # alone: which models, MCP servers, skills and agents TrueForge actually has.
+      - name: Cortex configuration health (doctor)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./bin/cortex doctor
+
+      - name: Architectural audit - pull request
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.CORTEX_GITHUB_PAT || secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: ./bin/cortex detect --pr "${{ github.event.pull_request.number }}"
+
+      - name: Architectural pre-flight scan - issue
+        if: github.event_name == 'issues'
+        env:
+          GITHUB_TOKEN: ${{ secrets.CORTEX_GITHUB_PAT || secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: ./bin/cortex detect --issue "${{ github.event.issue.number }}"
+
+      - name: Upload service logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cortex-detect-logs-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/trueforge.log
+            ${{ runner.temp }}/cortex-vector.log
+          if-no-files-found: ignore
+          retention-days: 7
