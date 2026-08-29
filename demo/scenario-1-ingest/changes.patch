@@ -1,0 +1,180 @@
+diff --git a/requirements.txt b/requirements.txt
+index b5a2c27..b65eb8b 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -4,3 +4,4 @@ pydantic==2.13.4
+ psycopg[binary]==3.2.12
+ PyJWT==2.11.0
+ python-dotenv==1.2.1
++redis==5.2.1
+diff --git b/src/cache/session.py b/src/cache/session.py
+new file mode 100644
+index 0000000..b0eb518
+--- /dev/null
++++ b/src/cache/session.py
+@@ -0,0 +1,165 @@
++"""Distributed session and token-revocation store, backed by Redis Cluster.
++
++Architectural contract
++----------------------
++See ``docs/adr/ADR-002-distributed-cache-redis.md``.
++
++    Invariant: session state and token blacklists MUST never be stored in
++    process memory. They MUST be stored in the shared Redis cache layer.
++
++Every API pod is stateless with respect to sessions: a request may land on any
++replica, and a replica may be evicted at any moment by the autoscaler. All
++mutable session state therefore lives in Redis, keyed by session id, with a TTL
++that Redis (not the application) is responsible for enforcing.
++"""
++
++from __future__ import annotations
++
++import json
++import os
++import secrets
++import time
++from dataclasses import asdict, dataclass, field
++from typing import Any, Iterator
++
++import redis
++
++SESSION_TTL_SECONDS = int(os.getenv("SESSION_TTL_SECONDS", "86400"))
++"""How long an idle session survives. Enforced by Redis key expiry."""
++
++REVOCATION_TTL_SECONDS = int(os.getenv("REVOCATION_TTL_SECONDS", "3600"))
++"""Revoked JWT ids only need to outlive the access token's own lifetime."""
++
++SESSION_KEY = "sess:{sid}"
++REVOKED_JTI_KEY = "jti:revoked:{jti}"
++
++# A connection pool is a socket handle, not application state: it holds no
++# session data and is safe to rebuild on process start.
++_pool = redis.ConnectionPool.from_url(
++    os.getenv("REDIS_URL", "redis://redis-cluster.internal:6379/0"),
++    max_connections=int(os.getenv("REDIS_MAX_CONNECTIONS", "64")),
++    socket_timeout=2.0,
++    socket_connect_timeout=1.0,
++    health_check_interval=30,
++    decode_responses=True,
++)
++
++
++def _client() -> redis.Redis:
++    return redis.Redis(connection_pool=_pool)
++
++
++class SessionStoreError(RuntimeError):
++    """Raised when the shared cache layer is unreachable.
++
++    Deliberately *not* caught with an in-process fallback: serving a request
++    from a local cache would silently break the ADR-002 invariant. Fail loud,
++    let the readiness probe pull the pod out of rotation.
++    """
++
++
++@dataclass(slots=True)
++class Session:
++    sid: str
++    user_id: str
++    created_at: float
++    last_seen_at: float
++    scopes: tuple[str, ...] = ()
++    data: dict[str, Any] = field(default_factory=dict)
++
++    def to_json(self) -> str:
++        payload = asdict(self)
++        payload["scopes"] = list(self.scopes)
++        return json.dumps(payload, separators=(",", ":"))
++
++    @classmethod
++    def from_json(cls, raw: str) -> "Session":
++        payload = json.loads(raw)
++        payload["scopes"] = tuple(payload.get("scopes", ()))
++        return cls(**payload)
++
++
++def create_session(user_id: str, scopes: tuple[str, ...] = ()) -> Session:
++    now = time.time()
++    session = Session(
++        sid=secrets.token_urlsafe(24),
++        user_id=user_id,
++        created_at=now,
++        last_seen_at=now,
++        scopes=scopes,
++    )
++    try:
++        _client().set(
++            SESSION_KEY.format(sid=session.sid),
++            session.to_json(),
++            ex=SESSION_TTL_SECONDS,
++        )
++    except redis.RedisError as exc:  # pragma: no cover - infra failure path
++        raise SessionStoreError("cannot write session to shared cache") from exc
++    return session
++
++
++def get_session(sid: str) -> Session | None:
++    try:
++        raw = _client().get(SESSION_KEY.format(sid=sid))
++    except redis.RedisError as exc:  # pragma: no cover - infra failure path
++        raise SessionStoreError("cannot read session from shared cache") from exc
++    return Session.from_json(raw) if raw else None
++
++
++def touch_session(sid: str) -> bool:
++    """Slide the idle window. Returns False if the session already expired."""
++    key = SESSION_KEY.format(sid=sid)
++    client = _client()
++    pipe = client.pipeline()
++    pipe.get(key)
++    pipe.expire(key, SESSION_TTL_SECONDS)
++    raw, extended = pipe.execute()
++    if not raw:
++        return False
++    session = Session.from_json(raw)
++    session.last_seen_at = time.time()
++    client.set(key, session.to_json(), ex=SESSION_TTL_SECONDS, xx=True)
++    return bool(extended)
++
++
++def delete_session(sid: str) -> None:
++    _client().delete(SESSION_KEY.format(sid=sid))
++
++
++def revoke_token(jti: str, ttl: int = REVOCATION_TTL_SECONDS) -> None:
++    """Add a JWT id to the shared blacklist.
++
++    Shared, not local: a token revoked while pod A served the logout must be
++    rejected by pods B..N on the very next request.
++    """
++    _client().set(REVOKED_JTI_KEY.format(jti=jti), "1", ex=ttl)
++
++
++def is_token_revoked(jti: str) -> bool:
++    return bool(_client().exists(REVOKED_JTI_KEY.format(jti=jti)))
++
++
++def iter_sessions(user_id: str | None = None) -> Iterator[Session]:
++    """Cursor-scan live sessions. SCAN, never KEYS - this runs in production."""
++    client = _client()
++    for key in client.scan_iter(match=SESSION_KEY.format(sid="*"), count=500):
++        raw = client.get(key)
++        if not raw:
++            continue
++        session = Session.from_json(raw)
++        if user_id is None or session.user_id == user_id:
++            yield session
++
++
++def healthcheck() -> dict[str, Any]:
++    started = time.perf_counter()
++    try:
++        _client().ping()
++    except redis.RedisError as exc:
++        return {"backend": "redis", "ok": False, "error": str(exc)}
++    return {
++        "backend": "redis",
++        "ok": True,
++        "latency_ms": round((time.perf_counter() - started) * 1000, 2),
++    }

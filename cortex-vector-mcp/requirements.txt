@@ -1,0 +1,9 @@
+# cortex-vector MCP server (Streamable HTTP on :9001) + semantic backend.
+#
+# mcp is pinned < 2: v1 exposes the stable FastMCP + streamable_http_app()
+# surface the server module is written against.
+# chromadb is optional at runtime - Store falls back to a stdlib TF-IDF index
+# if it cannot import (see cortex_vector_mcp/store.py).
+mcp>=1.10,<2
+uvicorn>=0.30
+chromadb>=1.5
