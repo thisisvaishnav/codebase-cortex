@@ -4,6 +4,13 @@
 > Source of truth: `GET http://localhost:8790/api/v1/openapi.json` + `--help` + live probes.
 >
 > **This document records where the repo's current design assumes an API that does not exist.**
+>
+> **Status (2026-08-29):** Findings §1 (no CLI runner), §3 (`agent.json` schema) and §6-8 (broken
+> CI workflows) are **resolved**. The repo ships `bin/cortex`, a thin REST wrapper validated
+> against the live OpenAPI, and the workflows drive it (`cortex detect|ingest`). The vector
+> store, which §4 said could not be an MCP connector, is now a self-hosted Streamable-HTTP
+> MCP server under `cortex-vector-mcp/`. The findings below remain the verified *historical*
+> basis those decisions were made on.
 
 ---
 
@@ -30,6 +37,10 @@ This command does not take positional arguments
 `npx @truefoundry/trueforge run agent.json --skill … --input …`. That command errors out immediately.
 
 TrueForge is a **server**, driven over REST. `agent.json` is not a CLI input artifact.
+
+**Resolution (2026-08-29):** `bin/cortex` is a thin REST wrapper (`./bin/cortex ingest --pr <n>`,
+`detect`, `explain`, `setup`, `doctor`). Both workflows now start TrueForge on :8790 and drive
+`/api/v1` through it, provisioning model providers, MCP servers and git-backed skills per run.
 
 ---
 
@@ -136,11 +147,11 @@ Custom remote servers can be registered via `POST /settings/mcp-servers` (auth: 
 
 | Task | Consequence |
 |---|---|
-| 1 — Core harness & MCP connectors | Rewrite `agent.json` to `AgentSpec`; connectors reduce to remote `github` only |
-| 2 — Vector store | Cannot be an MCP connector. Runs as sandbox code, or self-hosted remote MCP |
-| 3, 4, 5, 6 — the four cortex skills | Skills are **LLM instruction packs run in a sandbox**, not invocable code modules. Needs a decision on where real logic (embeddings, cosine similarity) lives |
+| 1 — Core harness & MCP connectors | Rewrite `agent.json` to `AgentSpec`; connectors reduce to remote `github` only — **done** |
+| 2 — Vector store | Cannot be an MCP connector. Runs as sandbox code, or self-hosted remote MCP — **done**: self-hosted `cortex-vector-mcp/` Streamable-HTTP MCP server (`searchDecisions`, `upsertDecision`, `updateStatus`) |
+| 3, 4, 5, 6 — the four cortex skills | Skills are **LLM instruction packs run in a sandbox**, not invocable code modules. Needs a decision on where real logic (embeddings, cosine similarity) lives — logic now lives in `cortex-vector-mcp/` |
 | 7 — Qodo resolver | Unaffected in principle (Qodo is a separate GitHub Action) |
-| 8 — CI workflows | **Broken.** Must drive the REST API, or wrap it in a CLI of our own |
+| 8 — CI workflows | **Broken.** Must drive the REST API, or wrap it in a CLI of our own — **done**: `bin/cortex` REST wrapper, used by both workflows |
 | 9 — Dashboard | Wire to `POST /sessions`, `POST …/turns`, `GET …/subscribe` (SSE) |
 | 10 — Daytona sandbox | Feasible; local fallback available for the demo |
 | 11 — Demo scenarios | Depends on all of the above |
