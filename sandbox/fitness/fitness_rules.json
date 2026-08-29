@@ -113,7 +113,7 @@
           "state_name_patterns": [
             "(?i)session",
             "(?i)(black|block|deny)_?list",
-            "(?i)revoked_?tokens?",
+            "(?i)revoked_?(jti|tokens?)",
             "(?i)token_?(cache|store)"
           ],
           "container_types": [
