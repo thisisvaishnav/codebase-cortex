@@ -24,18 +24,18 @@
   - [x] Wire automated post-merge confirmation comment to GitHub PR thread — SKILL Step 6 (`<!-- codebase-cortex:pr-analysis -->` upsert)
   - Note: pipeline pieces verified locally (vector MCP e2e + `node --check`); full runtime needs TrueForge + model key + `CORTEX_GITHUB_PAT` (see `.github/workflows/README.md`)
 
-- [ ] **Implement `cortex-detect` Two-Stage Violation Engine** - Contradiction detection on PR diffs and issues
-  - Implement Stage 1: Dense semantic candidate retrieval against modified file paths and diff concepts
-  - Implement Stage 2: LLM intent & invariant cross-encoder verification with confidence scoring (>= 80% hard violation, 60-79% advisory)
-  - Integrate `qodo-get-rules` pre-flight step to load repo coding standards before audit
-  - Implement AST / architectural fitness test execution hook inside Daytona sandbox
-  - Build single-comment upsert mechanism (`<!-- codebase-cortex:pr-analysis -->`) to prevent PR notification spam
+- [x] **Implement `cortex-detect` Two-Stage Violation Engine** - Contradiction detection on PR diffs and issues
+  - [x] Implement Stage 1: Dense semantic candidate retrieval against modified file paths and diff concepts
+  - [x] Implement Stage 2: LLM intent & invariant cross-encoder verification with confidence scoring (>= 80% hard violation, 60-79% advisory)
+  - [x] Integrate `qodo-get-rules` pre-flight step to load repo coding standards before audit
+  - [x] Implement AST / architectural fitness test execution hook inside Daytona sandbox (`sandbox/fitness/run_all.py` & `check_banned_dependencies.py`)
+  - [x] Build single-comment upsert mechanism (`<!-- codebase-cortex:pr-analysis -->`) to prevent PR notification spam
 
-- [ ] **Implement `cortex-notify` Maintainer Escalation Engine** - Intelligent routing to original authors and CODEOWNERS
-  - Build `.github/CODEOWNERS` parser to resolve responsible maintainers for affected paths
-  - Implement author resolution from matching ADR metadata (`@senior-dev`, original PR link)
-  - Build message formatting engine for drift warnings and contradiction alerts with actionable remediation tips
-  - Add deduplication and cooldown logic for PR review comment updates
+- [x] **Implement `cortex-notify` Maintainer Escalation Engine** - Intelligent routing to original authors and CODEOWNERS
+  - [x] Build `.github/CODEOWNERS` parser to resolve responsible maintainers for affected paths (`sandbox/notify/notify_engine.py`)
+  - [x] Implement author resolution from matching ADR metadata (`@senior-dev`, original PR link)
+  - [x] Build message formatting engine for drift warnings and contradiction alerts with actionable remediation tips
+  - [x] Add deduplication and cooldown logic for PR review comment updates (SHA-256 content hashing & ratchet)
 
 - [ ] **Implement `cortex-explain` Institutional Q&A Subagent** - Natural language query engine
   - Implement semantic search and multi-hop reasoning over ADR lineage (active vs. superseded)
