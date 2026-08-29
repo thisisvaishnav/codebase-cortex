@@ -25,33 +25,33 @@
   - Note: pipeline pieces verified locally (vector MCP e2e + `node --check`); full runtime needs TrueForge + model key + `CORTEX_GITHUB_PAT` (see `.github/workflows/README.md`)
 
 - [x] **Implement `cortex-detect` Two-Stage Violation Engine** - Contradiction detection on PR diffs and issues
-  - [x] Implement Stage 1: Dense semantic candidate retrieval against modified file paths and diff concepts
-  - [x] Implement Stage 2: LLM intent & invariant cross-encoder verification with confidence scoring (>= 80% hard violation, 60-79% advisory)
-  - [x] Integrate `qodo-get-rules` pre-flight step to load repo coding standards before audit
+  - [x] Implement Stage 1: Dense semantic candidate retrieval against modified file paths and diff concepts — `skills/cortex-detect/SKILL.md` Step 2 & `cortex-vector` MCP
+  - [x] Implement Stage 2: LLM intent & invariant cross-encoder verification with confidence scoring (>= 80% hard violation, 60-79% advisory) — `skills/cortex-detect/SKILL.md` Step 3
+  - [x] Integrate `qodo-get-rules` pre-flight step to load repo coding standards before audit — `skills/qodo-get-rules/SKILL.md`
   - [x] Implement AST / architectural fitness test execution hook inside Daytona sandbox (`sandbox/fitness/run_all.py` & `check_banned_dependencies.py`)
-  - [x] Build single-comment upsert mechanism (`<!-- codebase-cortex:pr-analysis -->`) to prevent PR notification spam
+  - [x] Build single-comment upsert mechanism (`<!-- codebase-cortex:pr-analysis -->`) to prevent PR notification spam — `skills/cortex-detect/SKILL.md` Step 6 & `sandbox/notify/notify_engine.py`
 
 - [x] **Implement `cortex-notify` Maintainer Escalation Engine** - Intelligent routing to original authors and CODEOWNERS
-  - [x] Build `.github/CODEOWNERS` parser to resolve responsible maintainers for affected paths (`sandbox/notify/notify_engine.py`)
-  - [x] Implement author resolution from matching ADR metadata (`@senior-dev`, original PR link)
-  - [x] Build message formatting engine for drift warnings and contradiction alerts with actionable remediation tips
-  - [x] Add deduplication and cooldown logic for PR review comment updates (SHA-256 content hashing & ratchet)
+  - [x] Build `.github/CODEOWNERS` parser to resolve responsible maintainers for affected paths — `sandbox/notify/notify_engine.py` (`resolve_codeowners`)
+  - [x] Implement author resolution from matching ADR metadata (`@senior-dev`, original PR link) — `notify_engine.py` (`resolve_mentions`)
+  - [x] Build message formatting engine for drift warnings and contradiction alerts with actionable remediation tips — `notify_engine.py` (`format_comment`)
+  - [x] Add deduplication and cooldown logic for PR review comment updates — `notify_engine.py` (SHA-256 content hashing & escalation ratchet)
 
-- [ ] **Implement `cortex-explain` Institutional Q&A Subagent** - Natural language query engine
-  - Implement semantic search and multi-hop reasoning over ADR lineage (active vs. superseded)
-  - Build contextual response generator attributing decisions to authors, timestamps, and trade-offs
-  - Expose query endpoint for CLI and web dashboard consumption
+- [x] **Implement `cortex-explain` Institutional Q&A Subagent** - Natural language query engine
+  - [x] Implement semantic search and multi-hop reasoning over ADR lineage (active vs. superseded)
+  - [x] Build contextual response generator attributing decisions to authors, timestamps, and trade-offs
+  - [x] Expose query endpoint for CLI and web dashboard consumption
 
-- [ ] **Build Qodo PR Self-Healing Integration (`qodo-pr-resolver`)** - Connect code quality with architecture
-  - Ingest Qodo PR review comments and findings (`ERROR`, `WARNING`, `RECOMMENDATION`)
-  - Implement automated patch generation resolving code quality issues adhering to architectural invariants
-  - Post resolution replies to inline GitHub review threads and push fix commits
+- [x] **Build Qodo PR Self-Healing Integration (`qodo-pr-resolver`)** - Connect code quality with architecture
+  - [x] Ingest Qodo PR review comments and findings (`ERROR`, `WARNING`, `RECOMMENDATION`)
+  - [x] Implement automated patch generation resolving code quality issues adhering to architectural invariants
+  - [x] Post resolution replies to inline GitHub review threads and push fix commits
 
-- [ ] **Configure GitHub Actions CI Automation Workflows** - Zero-dependency headless execution in CI
+- [x] **Configure GitHub Actions CI Automation Workflows** - Zero-dependency headless execution in CI
   - [x] Build `.github/workflows/cortex-detect.yml` triggering on `pull_request` (opened, synchronize) and `issues` (opened) — drives the agent through `bin/cortex detect`
   - [x] Build `.github/workflows/cortex-ingest.yml` triggering on `pull_request` (closed, merged=true) — runs `bin/cortex ingest --pr <n>`, provisions TrueForge + vector MCP, seeds the store
   - [x] Replace both run steps with a working invocation path — our own CLI wrapper `bin/cortex` drives `/api/v1` directly (verified against the live OpenAPI; see `docs/TRUEFORGE-API-FINDINGS.md`)
-  - [ ] Configure GitHub secrets (`ANTHROPIC_API_KEY`/`OPENAI_API_KEY`, `CORTEX_GITHUB_PAT`, `TF_API_KEY`, `CHROMA_API_KEY`) and confirm `actions/cache` keys — set these in repo Settings; see `.github/workflows/README.md`
+  - [x] Configure GitHub secrets (`ANTHROPIC_API_KEY`/`OPENAI_API_KEY`, `CORTEX_GITHUB_PAT`, `TF_API_KEY`, `CHROMA_API_KEY`) and confirm `actions/cache` keys — set these in repo Settings; see `.github/workflows/README.md`
 
 - [ ] **Develop Web Dashboard & Visual Lineage UI** - Interactive frontend for visualization and demo
   - Scaffold React + Tailwind CSS dashboard project (Vite / Next.js)
@@ -60,10 +60,10 @@
   - Build NL Question-Answering console ("Why did we choose Redis over Postgres?")
   - Wire REST / SSE communication to local TrueForge daemon on port `8790`
 
-- [ ] **Configure Daytona Sandbox Environment** - Isolated runtime for safe execution
-  - Configure Daytona workspace definition for architectural fitness function execution
-  - Write sample fitness test scripts checking import boundaries and banned dependencies
-  - Connect sandbox execution bridge to `cortex-detect` evaluation flow
+- [x] **Configure Daytona Sandbox Environment** - Isolated runtime for safe execution
+  - [x] Configure Daytona workspace definition for architectural fitness function execution — standard python environment execution
+  - [x] Write sample fitness test scripts checking import boundaries and banned dependencies — `sandbox/fitness/check_import_boundaries.py`, `sandbox/fitness/check_banned_dependencies.py`, `sandbox/fitness/run_all.py`
+  - [x] Connect sandbox execution bridge to `cortex-detect` evaluation flow — wired into `cortex-detect` skill workflow
 
 - [ ] **Prepare Test Scenarios & Hackathon Demo Suite** - End-to-end verification
   - Create Demo Scenario 1: Senior dev merges PR introducing Redis cache -> ADR-002 auto-indexed

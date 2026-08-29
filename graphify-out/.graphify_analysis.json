@@ -1,0 +1,604 @@
+{
+  "communities": {
+    "0": [
+      "cortex_vector_mcp_cortex_vector_mcp_indexer",
+      "cortex_vector_mcp_cortex_vector_mcp_indexer_bullets",
+      "cortex_vector_mcp_cortex_vector_mcp_indexer_extract_paths",
+      "cortex_vector_mcp_cortex_vector_mcp_indexer_index_directory",
+      "cortex_vector_mcp_cortex_vector_mcp_indexer_main",
+      "cortex_vector_mcp_cortex_vector_mcp_indexer_parse_adr_markdown",
+      "cortex_vector_mcp_cortex_vector_mcp_indexer_py_any",
+      "cortex_vector_mcp_cortex_vector_mcp_indexer_rationale_1",
+      "cortex_vector_mcp_cortex_vector_mcp_indexer_rationale_108",
+      "cortex_vector_mcp_cortex_vector_mcp_indexer_rationale_162",
+      "cortex_vector_mcp_cortex_vector_mcp_indexer_rationale_63",
+      "cortex_vector_mcp_cortex_vector_mcp_indexer_rationale_82",
+      "cortex_vector_mcp_cortex_vector_mcp_indexer_rationale_96",
+      "cortex_vector_mcp_cortex_vector_mcp_indexer_split_sections",
+      "cortex_vector_mcp_cortex_vector_mcp_init",
+      "cortex_vector_mcp_cortex_vector_mcp_init_rationale_1",
+      "cortex_vector_mcp_cortex_vector_mcp_schema",
+      "cortex_vector_mcp_cortex_vector_mcp_schema_adr",
+      "cortex_vector_mcp_cortex_vector_mcp_schema_adr_embedding_text",
+      "cortex_vector_mcp_cortex_vector_mcp_schema_adr_from_metadata",
+      "cortex_vector_mcp_cortex_vector_mcp_schema_adr_to_dict",
+      "cortex_vector_mcp_cortex_vector_mcp_schema_adr_to_metadata",
+      "cortex_vector_mcp_cortex_vector_mcp_schema_adrvalidationerror",
+      "cortex_vector_mcp_cortex_vector_mcp_schema_as_list",
+      "cortex_vector_mcp_cortex_vector_mcp_schema_as_optional_int",
+      "cortex_vector_mcp_cortex_vector_mcp_schema_py_any",
+      "cortex_vector_mcp_cortex_vector_mcp_schema_rationale_1",
+      "cortex_vector_mcp_cortex_vector_mcp_schema_rationale_129",
+      "cortex_vector_mcp_cortex_vector_mcp_schema_rationale_28",
+      "cortex_vector_mcp_cortex_vector_mcp_schema_rationale_33",
+      "cortex_vector_mcp_cortex_vector_mcp_schema_rationale_52",
+      "cortex_vector_mcp_cortex_vector_mcp_schema_rationale_73",
+      "cortex_vector_mcp_cortex_vector_mcp_schema_rationale_87",
+      "cortex_vector_mcp_cortex_vector_mcp_schema_validate_adr",
+      "cortex_vector_mcp_cortex_vector_mcp_server",
+      "cortex_vector_mcp_cortex_vector_mcp_server_count",
+      "cortex_vector_mcp_cortex_vector_mcp_server_get_store",
+      "cortex_vector_mcp_cortex_vector_mcp_server_getdecision",
+      "cortex_vector_mcp_cortex_vector_mcp_server_healthcheck",
+      "cortex_vector_mcp_cortex_vector_mcp_server_listdecisions",
+      "cortex_vector_mcp_cortex_vector_mcp_server_py_any",
+      "cortex_vector_mcp_cortex_vector_mcp_server_rationale_1",
+      "cortex_vector_mcp_cortex_vector_mcp_server_rationale_111",
+      "cortex_vector_mcp_cortex_vector_mcp_server_rationale_128",
+      "cortex_vector_mcp_cortex_vector_mcp_server_rationale_135",
+      "cortex_vector_mcp_cortex_vector_mcp_server_rationale_141",
+      "cortex_vector_mcp_cortex_vector_mcp_server_rationale_147",
+      "cortex_vector_mcp_cortex_vector_mcp_server_rationale_43",
+      "cortex_vector_mcp_cortex_vector_mcp_server_rationale_65",
+      "cortex_vector_mcp_cortex_vector_mcp_server_rationale_91",
+      "cortex_vector_mcp_cortex_vector_mcp_server_searchdecisions",
+      "cortex_vector_mcp_cortex_vector_mcp_server_updatestatus",
+      "cortex_vector_mcp_cortex_vector_mcp_server_upsertdecision",
+      "cortex_vector_mcp_cortex_vector_mcp_store",
+      "cortex_vector_mcp_cortex_vector_mcp_store_rationale_1",
+      "cortex_vector_mcp_cortex_vector_mcp_store_rationale_167",
+      "cortex_vector_mcp_cortex_vector_mcp_store_rationale_173",
+      "cortex_vector_mcp_cortex_vector_mcp_store_rationale_190",
+      "cortex_vector_mcp_cortex_vector_mcp_store_rationale_234",
+      "cortex_vector_mcp_cortex_vector_mcp_store_store",
+      "cortex_vector_mcp_cortex_vector_mcp_store_store_count",
+      "cortex_vector_mcp_cortex_vector_mcp_store_store_get_decision",
+      "cortex_vector_mcp_cortex_vector_mcp_store_store_init",
+      "cortex_vector_mcp_cortex_vector_mcp_store_store_list_decisions",
+      "cortex_vector_mcp_cortex_vector_mcp_store_store_search_decisions",
+      "cortex_vector_mcp_cortex_vector_mcp_store_store_semantic",
+      "cortex_vector_mcp_cortex_vector_mcp_store_store_try_chroma",
+      "cortex_vector_mcp_cortex_vector_mcp_store_store_update_status",
+      "cortex_vector_mcp_cortex_vector_mcp_store_store_upsert_decision",
+      "path",
+      "pathlike",
+      "tool",
+      "valueerror"
+    ],
+    "1": [
+      "dict",
+      "exception",
+      "sandbox_fitness_fitness_common",
+      "sandbox_fitness_fitness_common_build_parser",
+      "sandbox_fitness_fitness_common_call_matches",
+      "sandbox_fitness_fitness_common_compile_patterns",
+      "sandbox_fitness_fitness_common_dotted_name",
+      "sandbox_fitness_fitness_common_emit",
+      "sandbox_fitness_fitness_common_fitnesserror",
+      "sandbox_fitness_fitness_common_global_excludes",
+      "sandbox_fitness_fitness_common_import_statements",
+      "sandbox_fitness_fitness_common_is_excluded",
+      "sandbox_fitness_fitness_common_is_glob",
+      "sandbox_fitness_fitness_common_iter_python_files",
+      "sandbox_fitness_fitness_common_load_rules",
+      "sandbox_fitness_fitness_common_load_tree",
+      "sandbox_fitness_fitness_common_module_matches",
+      "sandbox_fitness_fitness_common_normalise",
+      "sandbox_fitness_fitness_common_package_parts",
+      "sandbox_fitness_fitness_common_parse_errors_result",
+      "sandbox_fitness_fitness_common_path_matches",
+      "sandbox_fitness_fitness_common_print_human_summary",
+      "sandbox_fitness_fitness_common_rationale_100",
+      "sandbox_fitness_fitness_common_rationale_112",
+      "sandbox_fitness_fitness_common_rationale_135",
+      "sandbox_fitness_fitness_common_rationale_161",
+      "sandbox_fitness_fitness_common_rationale_185",
+      "sandbox_fitness_fitness_common_rationale_204",
+      "sandbox_fitness_fitness_common_rationale_232",
+      "sandbox_fitness_fitness_common_rationale_238",
+      "sandbox_fitness_fitness_common_rationale_248",
+      "sandbox_fitness_fitness_common_rationale_285",
+      "sandbox_fitness_fitness_common_rationale_300",
+      "sandbox_fitness_fitness_common_rationale_36",
+      "sandbox_fitness_fitness_common_rationale_363",
+      "sandbox_fitness_fitness_common_rationale_377",
+      "sandbox_fitness_fitness_common_rationale_40",
+      "sandbox_fitness_fitness_common_rationale_454",
+      "sandbox_fitness_fitness_common_rationale_49",
+      "sandbox_fitness_fitness_common_rationale_73",
+      "sandbox_fitness_fitness_common_render",
+      "sandbox_fitness_fitness_common_resolve_relative_import",
+      "sandbox_fitness_fitness_common_result",
+      "sandbox_fitness_fitness_common_rule_files",
+      "sandbox_fitness_fitness_common_rule_section",
+      "sandbox_fitness_fitness_common_ruleconfigerror",
+      "sandbox_fitness_fitness_common_safedict",
+      "sandbox_fitness_fitness_common_safedict_missing",
+      "sandbox_fitness_fitness_common_standalone_main",
+      "sandbox_fitness_fitness_common_summarise",
+      "sandbox_fitness_fitness_common_violation"
+    ],
+    "2": [
+      "bin_cortex",
+      "bin_cortex_api",
+      "bin_cortex_authheaders",
+      "bin_cortex_die",
+      "bin_cortex_doctor",
+      "bin_cortex_ensureagent",
+      "bin_cortex_ensuregithubmcp",
+      "bin_cortex_ensureskills",
+      "bin_cortex_ensurevectormcp",
+      "bin_cortex_log",
+      "bin_cortex_main",
+      "bin_cortex_model_preference",
+      "bin_cortex_parseargs",
+      "bin_cortex_pollturn",
+      "bin_cortex_prompts",
+      "bin_cortex_reposlug",
+      "bin_cortex_resolvemodel",
+      "bin_cortex_runturn",
+      "bin_cortex_setup",
+      "bin_cortex_tf_url",
+      "bin_cortex_turntext",
+      "bin_cortex_waitforserver",
+      "ensuregithubmcp"
+    ],
+    "3": [
+      "demo_scenario_1_ingest_files_src_cache_session",
+      "demo_scenario_1_ingest_files_src_cache_session_client",
+      "demo_scenario_1_ingest_files_src_cache_session_create_session",
+      "demo_scenario_1_ingest_files_src_cache_session_delete_session",
+      "demo_scenario_1_ingest_files_src_cache_session_get_session",
+      "demo_scenario_1_ingest_files_src_cache_session_healthcheck",
+      "demo_scenario_1_ingest_files_src_cache_session_is_token_revoked",
+      "demo_scenario_1_ingest_files_src_cache_session_iter_sessions",
+      "demo_scenario_1_ingest_files_src_cache_session_py_any",
+      "demo_scenario_1_ingest_files_src_cache_session_py_runtimeerror",
+      "demo_scenario_1_ingest_files_src_cache_session_rationale_1",
+      "demo_scenario_1_ingest_files_src_cache_session_rationale_111",
+      "demo_scenario_1_ingest_files_src_cache_session_rationale_131",
+      "demo_scenario_1_ingest_files_src_cache_session_rationale_144",
+      "demo_scenario_1_ingest_files_src_cache_session_rationale_53",
+      "demo_scenario_1_ingest_files_src_cache_session_revoke_token",
+      "demo_scenario_1_ingest_files_src_cache_session_session",
+      "demo_scenario_1_ingest_files_src_cache_session_session_from_json",
+      "demo_scenario_1_ingest_files_src_cache_session_session_to_json",
+      "demo_scenario_1_ingest_files_src_cache_session_sessionstoreerror",
+      "demo_scenario_1_ingest_files_src_cache_session_touch_session",
+      "redis"
+    ],
+    "4": [
+      "hackathon_docs_06_qodo_agent_skills_qodo_get_rules_overview",
+      "hackathon_docs_06_qodo_agent_skills_qodo_pr_resolver_overview",
+      "skills_cortex_detect_skill_cortex_detect_workflow",
+      "skills_cortex_detect_skill_single_comment_upsert",
+      "skills_cortex_detect_skill_two_stage_retrieval_eval",
+      "skills_cortex_explain_skill_cortex_explain_skill",
+      "skills_cortex_explain_skill_multi_hop_lineage_tracing",
+      "skills_cortex_ingest_skill_cortex_ingest_skill",
+      "skills_cortex_ingest_skill_hybrid_extraction_path",
+      "skills_cortex_ingest_skill_vector_upsert_sync",
+      "skills_cortex_notify_skill_codeowners_resolution",
+      "skills_cortex_notify_skill_cortex_notify_skill",
+      "skills_cortex_notify_skill_deduplication_cooldown",
+      "skills_qodo_get_rules_skill_qodo_get_rules_skill",
+      "skills_qodo_get_rules_skill_rule_relevance_filter",
+      "skills_qodo_get_rules_skill_standards_precedence_hierarchy",
+      "skills_qodo_pr_resolver_reference_declined_architectural_template",
+      "skills_qodo_pr_resolver_reference_pr_resolver_templates",
+      "skills_qodo_pr_resolver_skill_architectural_veto_gate",
+      "skills_qodo_pr_resolver_skill_qodo_pr_resolver_skill"
+    ],
+    "5": [
+      "sandbox_notify_notify_engine",
+      "sandbox_notify_notify_engine_clean_handle",
+      "sandbox_notify_notify_engine_compute_content_hash",
+      "sandbox_notify_notify_engine_format_comment",
+      "sandbox_notify_notify_engine_main",
+      "sandbox_notify_notify_engine_match_path",
+      "sandbox_notify_notify_engine_normalize_markdown",
+      "sandbox_notify_notify_engine_parse_codeowners_rules",
+      "sandbox_notify_notify_engine_rationale_120",
+      "sandbox_notify_notify_engine_rationale_131",
+      "sandbox_notify_notify_engine_rationale_142",
+      "sandbox_notify_notify_engine_rationale_18",
+      "sandbox_notify_notify_engine_rationale_33",
+      "sandbox_notify_notify_engine_rationale_69",
+      "sandbox_notify_notify_engine_rationale_89",
+      "sandbox_notify_notify_engine_rationale_99",
+      "sandbox_notify_notify_engine_resolve_codeowners",
+      "sandbox_notify_notify_engine_resolve_mentions"
+    ],
+    "6": [
+      "demo_scenario_2_violation_files_src_cache_session",
+      "demo_scenario_2_violation_files_src_cache_session_create_session",
+      "demo_scenario_2_violation_files_src_cache_session_delete_session",
+      "demo_scenario_2_violation_files_src_cache_session_get_session",
+      "demo_scenario_2_violation_files_src_cache_session_healthcheck",
+      "demo_scenario_2_violation_files_src_cache_session_is_token_revoked",
+      "demo_scenario_2_violation_files_src_cache_session_iter_sessions",
+      "demo_scenario_2_violation_files_src_cache_session_py_any",
+      "demo_scenario_2_violation_files_src_cache_session_py_runtimeerror",
+      "demo_scenario_2_violation_files_src_cache_session_rationale_1",
+      "demo_scenario_2_violation_files_src_cache_session_rationale_42",
+      "demo_scenario_2_violation_files_src_cache_session_revoke_token",
+      "demo_scenario_2_violation_files_src_cache_session_session",
+      "demo_scenario_2_violation_files_src_cache_session_session_as_dict",
+      "demo_scenario_2_violation_files_src_cache_session_sessionstoreerror",
+      "demo_scenario_2_violation_files_src_cache_session_sweep_locked",
+      "demo_scenario_2_violation_files_src_cache_session_touch_session"
+    ],
+    "7": [
+      "cortex_vector_mcp_cortex_vector_mcp_store_lexicalindex",
+      "cortex_vector_mcp_cortex_vector_mcp_store_lexicalindex_all_metadata",
+      "cortex_vector_mcp_cortex_vector_mcp_store_lexicalindex_delete",
+      "cortex_vector_mcp_cortex_vector_mcp_store_lexicalindex_get",
+      "cortex_vector_mcp_cortex_vector_mcp_store_lexicalindex_init",
+      "cortex_vector_mcp_cortex_vector_mcp_store_lexicalindex_query",
+      "cortex_vector_mcp_cortex_vector_mcp_store_lexicalindex_reindex",
+      "cortex_vector_mcp_cortex_vector_mcp_store_lexicalindex_upsert",
+      "cortex_vector_mcp_cortex_vector_mcp_store_lexicalindex_vectorize",
+      "cortex_vector_mcp_cortex_vector_mcp_store_py_any",
+      "cortex_vector_mcp_cortex_vector_mcp_store_rationale_289",
+      "cortex_vector_mcp_cortex_vector_mcp_store_rationale_45",
+      "cortex_vector_mcp_cortex_vector_mcp_store_rationale_57",
+      "cortex_vector_mcp_cortex_vector_mcp_store_store_upsert_diff",
+      "cortex_vector_mcp_cortex_vector_mcp_store_tokenize"
+    ],
+    "8": [
+      "adr_collection",
+      "agent_json",
+      "agentspec_schema",
+      "chromadb",
+      "cortex_ingest_workflow",
+      "cortex_vector_mcp",
+      "createagentrequest",
+      "diff_embeddings",
+      "filesystem_mcp_connector",
+      "github_mcp_connector",
+      "sqlite_persistent_state",
+      "tfidf_fallback",
+      "trueforge_core_harness",
+      "vectorscore_mcp_connector"
+    ],
+    "9": [
+      "_github_pull_request_template_pr_decision_record",
+      "_github_workflows_cortex_detect_workflow",
+      "_github_workflows_cortex_ingest_workflow",
+      "_github_workflows_readme_ci_workflows_doc",
+      "cortex_vector_mcp_requirements_dependencies",
+      "docs_adr_001_codebase_cortex_adr001",
+      "docs_adr_001_codebase_cortex_two_stage_detection",
+      "docs_adr_adr_002_distributed_cache_redis_adr002",
+      "docs_adr_adr_003_event_driven_architecture_adr003",
+      "docs_architecture_system_architecture",
+      "docs_trueforge_api_findings_runtime_findings"
+    ],
+    "10": [
+      "adr_schema_validator",
+      "adr_status_transition",
+      "cold_start_indexer",
+      "cortex_ingest_agent",
+      "cosine_similarity_query",
+      "git_adr_writer",
+      "github_pr_template",
+      "llm_extractor_fallback",
+      "post_merge_comment",
+      "pr_decision_template_parser",
+      "vector_knowledge_store"
+    ],
+    "11": [
+      "tests_test_cortex_engines",
+      "tests_test_cortex_engines_testcortexfitnessengine",
+      "tests_test_cortex_engines_testcortexfitnessengine_setup",
+      "tests_test_cortex_engines_testcortexfitnessengine_test_compliant_base_passes_fitness",
+      "tests_test_cortex_engines_testcortexfitnessengine_test_violation_scenario_flags_in_process_state",
+      "tests_test_cortex_engines_testcortexnotifyengine",
+      "tests_test_cortex_engines_testcortexnotifyengine_setup",
+      "tests_test_cortex_engines_testcortexnotifyengine_test_codeowners_parsing_last_matching_rule_wins",
+      "tests_test_cortex_engines_testcortexnotifyengine_test_comment_formatting_and_dedup_hash",
+      "tests_test_cortex_engines_testcortexnotifyengine_test_escalation_ratchet",
+      "tests_test_cortex_engines_testcortexnotifyengine_test_mention_hygiene_and_self_tagging"
+    ],
+    "12": [
+      "architecture_drift_heatmaps",
+      "multi_repo_federation",
+      "slack_discord_webhooks",
+      "tasks_done",
+      "tasks_md",
+      "tasks_someday",
+      "tasks_waiting_on",
+      "trueforge_api_findings",
+      "trueforge_integration_direction"
+    ],
+    "13": [
+      "author_resolution",
+      "codeowners_parser",
+      "cortex_notify_agent",
+      "deduplication_cooldown",
+      "demo_scenario_2",
+      "github_codeowners",
+      "message_formatting_engine",
+      "sandbox_notify_engine",
+      "senior_dev"
+    ],
+    "14": [
+      "cortex_detect_agent",
+      "daytona_sandbox",
+      "daytona_workspace",
+      "fitness_test_scripts",
+      "qodo_get_rules",
+      "sandbox_execution_bridge",
+      "single_comment_upsert",
+      "stage1_dense_retrieval",
+      "stage2_llm_verification"
+    ],
+    "15": [
+      "contextual_response_generator",
+      "cortex_explain_agent",
+      "demo_scenario_1",
+      "demo_scenario_3",
+      "demo_scenario_4",
+      "query_endpoint",
+      "semantic_search_multihop",
+      "test_scenarios"
+    ],
+    "16": [
+      "ast_fitness_test",
+      "check_banned_dependencies",
+      "sandbox_fitness_check_import_boundaries",
+      "sandbox_fitness_check_import_boundaries_run",
+      "sandbox_fitness_run_all",
+      "sandbox_fitness_run_all_main",
+      "sandbox_fitness_run_all_run_all"
+    ],
+    "17": [
+      "automated_patch_generation",
+      "cortex_detect_workflow",
+      "github_secrets",
+      "github_workflows_readme",
+      "qodo_ingest",
+      "qodo_pr_resolver",
+      "tasks_active"
+    ],
+    "18": [
+      "hackathon_docs_04_trueforge_getting_started_daytona_sandbox",
+      "hackathon_docs_04_trueforge_getting_started_mcp_tools",
+      "hackathon_docs_04_trueforge_getting_started_trueforge_harness",
+      "hackathon_docs_07_resources_agent_cookbook",
+      "hackathon_docs_07_resources_hackathon_resources",
+      "skills_cortex_detect_skill_architectural_fitness_checks",
+      "skills_qodo_pr_resolver_skill_sandbox_verification_loop"
+    ],
+    "19": [
+      "adr_visual_timeline",
+      "nl_qa_console",
+      "react_tailwind",
+      "realtime_violation_feed",
+      "trueforge_daemon_port",
+      "web_dashboard"
+    ],
+    "20": [
+      "sandbox_fitness_check_banned_dependencies",
+      "sandbox_fitness_check_banned_dependencies_check_banned_calls",
+      "sandbox_fitness_check_banned_dependencies_check_banned_modules",
+      "sandbox_fitness_check_banned_dependencies_check_in_process_state",
+      "sandbox_fitness_check_banned_dependencies_is_container_type",
+      "sandbox_fitness_check_banned_dependencies_run"
+    ],
+    "21": [
+      "hackathon_docs_00_index_index_doc",
+      "hackathon_docs_01_overview_overview_doc",
+      "hackathon_docs_02_rules_rules_doc",
+      "hackathon_docs_03_prizes_prizes_doc"
+    ],
+    "22": [
+      "demo_fixtures_base_requirements_base_deps",
+      "demo_scenario_1_ingest_files_requirements_scenario1_deps",
+      "demo_scenario_2_violation_files_requirements_scenario2_deps"
+    ],
+    "23": [
+      "opencode_plugins_graphify",
+      "opencode_plugins_graphify_graphifyplugin",
+      "opencode_plugins_graphify_rationale_4"
+    ],
+    "24": [
+      "demo_fixtures_base_src_cache_init",
+      "demo_fixtures_base_src_cache_init_rationale_1"
+    ],
+    "25": [
+      "demo_scenario_1_ingest_files_src_cache_init",
+      "demo_scenario_1_ingest_files_src_cache_init_rationale_1"
+    ],
+    "26": [
+      "demo_scenario_2_violation_files_src_cache_init",
+      "demo_scenario_2_violation_files_src_cache_init_rationale_1"
+    ],
+    "27": [
+      "hackathon_docs_05_qodo_guide_code_review_evidence",
+      "hackathon_docs_05_qodo_guide_qodo_platform"
+    ],
+    "28": [
+      "hackathon_docs_06_qodo_agent_skills_agent_skills_standard",
+      "hackathon_docs_06_qodo_agent_skills_shift_left_quality"
+    ],
+    "29": [
+      "cortex_vector_mcp_readme_vector_mcp_doc"
+    ],
+    "30": [
+      "dashboard_web_dashboard"
+    ],
+    "31": [
+      "hackathon_docs_04_trueforge_getting_started_sub_agents"
+    ],
+    "32": [
+      "hackathon_docs_05_qodo_guide_agentic_review_command"
+    ],
+    "33": [
+      "skills_cortex_explain_skill_query_surfaces"
+    ],
+    "34": [
+      "skills_qodo_pr_resolver_reference_resolution_summary_template"
+    ]
+  },
+  "cohesion": {
+    "0": 0.05289193302891933,
+    "1": 0.06196078431372549,
+    "2": 0.233201581027668,
+    "3": 0.15151515151515152,
+    "4": 0.11052631578947368,
+    "5": 0.16993464052287582,
+    "6": 0.15441176470588236,
+    "7": 0.20952380952380953,
+    "8": 0.14285714285714285,
+    "9": 0.2545454545454545,
+    "10": 0.21818181818181817,
+    "11": 0.18181818181818182,
+    "12": 0.2222222222222222,
+    "13": 0.2222222222222222,
+    "14": 0.2222222222222222,
+    "15": 0.25,
+    "16": 0.38095238095238093,
+    "17": 0.2857142857142857,
+    "18": 0.2857142857142857,
+    "19": 0.3333333333333333,
+    "20": 0.6,
+    "21": 0.5,
+    "22": 1.0,
+    "23": 0.6666666666666666,
+    "24": 1.0,
+    "25": 1.0,
+    "26": 1.0,
+    "27": 1.0,
+    "28": 1.0,
+    "29": 1.0,
+    "30": 1.0,
+    "31": 1.0,
+    "32": 1.0,
+    "33": 1.0,
+    "34": 1.0
+  },
+  "gods": [
+    {
+      "id": "cortex_vector_mcp_cortex_vector_mcp_store_store",
+      "label": "Store",
+      "degree": 18
+    },
+    {
+      "id": "cortex_vector_mcp_cortex_vector_mcp_schema_adr",
+      "label": "ADR",
+      "degree": 14
+    },
+    {
+      "id": "tasks_active",
+      "label": "Active Tasks",
+      "degree": 14
+    },
+    {
+      "id": "cortex_vector_mcp_cortex_vector_mcp_schema_validate_adr",
+      "label": "validate_adr()",
+      "degree": 12
+    },
+    {
+      "id": "cortex_vector_mcp_cortex_vector_mcp_store_lexicalindex",
+      "label": "_LexicalIndex",
+      "degree": 11
+    },
+    {
+      "id": "demo_scenario_1_ingest_files_src_cache_session_client",
+      "label": "_client()",
+      "degree": 10
+    },
+    {
+      "id": "cortex_vector_mcp_cortex_vector_mcp_server_get_store",
+      "label": "get_store()",
+      "degree": 10
+    },
+    {
+      "id": "cortex_vector_mcp_cortex_vector_mcp_schema_adrvalidationerror",
+      "label": "ADRValidationError",
+      "degree": 9
+    },
+    {
+      "id": "sandbox_fitness_fitness_common_normalise",
+      "label": "normalise()",
+      "degree": 9
+    },
+    {
+      "id": "cortex_vector_mcp_cortex_vector_mcp_indexer_index_directory",
+      "label": "index_directory()",
+      "degree": 8
+    }
+  ],
+  "surprises": [
+    {
+      "source": "Architectural Fitness Verification Checks",
+      "target": "Daytona Code Execution Sandbox",
+      "source_files": [
+        "skills/cortex-detect/SKILL.md",
+        "hackathon-docs/04-trueforge-getting-started.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "conceptually_related_to",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories"
+    },
+    {
+      "source": "Sandbox Patch Verification and Iteration Loop",
+      "target": "Daytona Code Execution Sandbox",
+      "source_files": [
+        "skills/qodo-pr-resolver/SKILL.md",
+        "hackathon-docs/04-trueforge-getting-started.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "conceptually_related_to",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories"
+    },
+    {
+      "source": "ADR-002: Redis for Distributed Session Persistence",
+      "target": "ADR-003: Asynchronous Event Bus for Billing & Notifications",
+      "source_files": [
+        "docs/adr/ADR-002-distributed-cache-redis.md",
+        "docs/adr/ADR-003-event-driven-architecture.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "semantically_similar_to",
+      "why": "inferred connection - not explicitly stated in source; semantically similar concepts with no structural link"
+    },
+    {
+      "source": "Scenario 1 Ingest Requirements",
+      "target": "Scenario 2 Violation Requirements",
+      "source_files": [
+        "demo/scenario-1-ingest/files/requirements.txt",
+        "demo/scenario-2-violation/files/requirements.txt"
+      ],
+      "confidence": "INFERRED",
+      "relation": "semantically_similar_to",
+      "why": "inferred connection - not explicitly stated in source; semantically similar concepts with no structural link"
+    },
+    {
+      "source": "qodo-get-rules Skill Overview",
+      "target": "qodo-get-rules Standards Ingestion Skill",
+      "source_files": [
+        "hackathon-docs/06-qodo-agent-skills.md",
+        "skills/qodo-get-rules/SKILL.md"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    }
+  ],
+  "tokens": {
+    "input": 3021,
+    "output": 11362
+  }
+}

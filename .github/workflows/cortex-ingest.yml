@@ -191,6 +191,7 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || secrets.GOOGLE_API_KEY }}
           # api.githubcopilot.com/mcp/ generally needs a PAT; the ephemeral Actions token
           # may be rejected. Set CORTEX_GITHUB_PAT to override. See workflows/README.md.
           GITHUB_MCP_TOKEN: ${{ secrets.CORTEX_GITHUB_PAT || secrets.GITHUB_TOKEN }}
@@ -214,6 +215,14 @@ jobs:
             echo "POST $1 -> $code"
           }
 
+          if [ -n "${GEMINI_API_KEY:-}" ]; then
+            post /settings/model-providers "$(jq -nc --arg k "$GEMINI_API_KEY" \
+              '{manifest:{type:"gemini",auth:{api_key:$k},models:[
+                 {model_id:"gemini-2.5-flash",name:"gemini-2-5-flash",
+                  properties:{context_length:1000000,max_output_tokens:8192}},
+                 {model_id:"gemini-1.5-pro",name:"gemini-1-5-pro",
+                  properties:{context_length:2000000,max_output_tokens:8192}}]}}')" || true
+          fi
           if [ -n "${ANTHROPIC_API_KEY:-}" ]; then
             post /settings/model-providers "$(jq -nc --arg k "$ANTHROPIC_API_KEY" \
               '{manifest:{type:"anthropic",auth:{api_key:$k},models:[
@@ -226,8 +235,8 @@ jobs:
                  {model_id:"gpt-5.5",name:"gpt-5-5",
                   properties:{context_length:1050000,max_output_tokens:128000}}]}}')" || true
           fi
-          if [ -z "${ANTHROPIC_API_KEY:-}${OPENAI_API_KEY:-}" ]; then
-            echo "::error title=No model provider secret::set ANTHROPIC_API_KEY or OPENAI_API_KEY"
+          if [ -z "${ANTHROPIC_API_KEY:-}${OPENAI_API_KEY:-}${GEMINI_API_KEY:-}" ]; then
+            echo "::error title=No model provider secret::set GEMINI_API_KEY, ANTHROPIC_API_KEY, or OPENAI_API_KEY"
             exit 1
           fi
 

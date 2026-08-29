@@ -33,11 +33,13 @@ const AGENT_NAME = 'codebase-cortex';
 
 /** Models we prefer, best first. Falls back to whatever is configured. */
 const MODEL_PREFERENCE = [
+  'google-gemini/gemini-2-5-flash',
+  'google-gemini/gemini-1-5-pro',
+  'google-gemini/gemini-3-1-pro-preview',
   'anthropic/claude-sonnet-5',
   'anthropic/claude-opus-5',
   'anthropic/claude-sonnet-4-6',
   'openai/gpt-5-5',
-  'google-gemini/gemini-3-1-pro-preview',
 ];
 
 // ---------------------------------------------------------------- http helpers
@@ -458,7 +460,28 @@ async function main() {
     prompt = PROMPTS.ingest(args.pr, args.author);
   } else if (cmd === 'explain') {
     if (!args.question || args.question === true) die('explain needs --question "<text>"');
-    prompt = PROMPTS.explain(args.question);
+    const question = args.question;
+
+    // Direct HTTP REST query attempt against cortex-vector MCP endpoint
+    const vectorExplainUrl = VECTOR_URL.replace(/\/mcp\/?$/, '/api/explain');
+    try {
+      const res = await fetch(vectorExplainUrl, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ question }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.answer) {
+          console.log(data.answer);
+          return;
+        }
+      }
+    } catch {
+      /* fallback to TrueForge REST agent turn */
+    }
+
+    prompt = PROMPTS.explain(question);
   } else {
     die(`unknown command "${cmd}"\n\n${USAGE}`);
   }
@@ -471,3 +494,4 @@ async function main() {
 }
 
 main().catch((e) => die(e.stack || e.message));
+

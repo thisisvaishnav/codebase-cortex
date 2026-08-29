@@ -1,0 +1,290 @@
+{
+  ".opencode/opencode.json": {
+    "mtime": 1788018721.0492985,
+    "seen": 1788019041.187019,
+    "ast_hash": "abcc8b9dcd80bca5f9dde6d9f0c3ae79",
+    "semantic_hash": "abcc8b9dcd80bca5f9dde6d9f0c3ae79"
+  },
+  ".opencode/plugins/graphify.js": {
+    "mtime": 1788018721.0492148,
+    "seen": 1788019041.187022,
+    "ast_hash": "3ea725724bc8ebe483c9f13d6aa1124f",
+    "semantic_hash": "3ea725724bc8ebe483c9f13d6aa1124f"
+  },
+  "agent.json": {
+    "mtime": 1788015748.4704633,
+    "seen": 1788019041.1870232,
+    "ast_hash": "493ddd2e77a268b1e5aa511081bbe173",
+    "semantic_hash": "493ddd2e77a268b1e5aa511081bbe173"
+  },
+  "bin/cortex": {
+    "mtime": 1788015748.4712276,
+    "seen": 1788019041.1870239,
+    "ast_hash": "cc8118f47406c55c917036f2f70e7eaf",
+    "semantic_hash": "cc8118f47406c55c917036f2f70e7eaf"
+  },
+  "cortex-vector-mcp/cortex_vector_mcp/__init__.py": {
+    "mtime": 1788015748.4738526,
+    "seen": 1788019041.1870239,
+    "ast_hash": "1cf9a4980d6c2974e1fda2778dd0e94a",
+    "semantic_hash": "1cf9a4980d6c2974e1fda2778dd0e94a"
+  },
+  "cortex-vector-mcp/cortex_vector_mcp/indexer.py": {
+    "mtime": 1788015748.474256,
+    "seen": 1788019041.1870248,
+    "ast_hash": "2412f8c2381a1367f7caf316ec348783",
+    "semantic_hash": "2412f8c2381a1367f7caf316ec348783"
+  },
+  "cortex-vector-mcp/cortex_vector_mcp/schema.py": {
+    "mtime": 1788015748.4750528,
+    "seen": 1788019041.187026,
+    "ast_hash": "7a51c5c94e882c52be7e637fd7b3e12e",
+    "semantic_hash": "7a51c5c94e882c52be7e637fd7b3e12e"
+  },
+  "cortex-vector-mcp/cortex_vector_mcp/server.py": {
+    "mtime": 1788018180.9812825,
+    "seen": 1788019041.187026,
+    "ast_hash": "2ff274003de2ec9d2655abf3b21ad9ed",
+    "semantic_hash": "2ff274003de2ec9d2655abf3b21ad9ed"
+  },
+  "cortex-vector-mcp/cortex_vector_mcp/store.py": {
+    "mtime": 1788015748.4782746,
+    "seen": 1788019041.187027,
+    "ast_hash": "9b804d3ab5c651cb483a315e33a9910f",
+    "semantic_hash": "9b804d3ab5c651cb483a315e33a9910f"
+  },
+  "demo/fixtures/base/src/cache/__init__.py": {
+    "mtime": 1788015748.4898837,
+    "seen": 1788019041.187027,
+    "ast_hash": "421ac3b4954e3893a88d0c99fed58bc0",
+    "semantic_hash": "421ac3b4954e3893a88d0c99fed58bc0"
+  },
+  "demo/scenario-1-ingest/files/src/cache/__init__.py": {
+    "mtime": 1788015748.491185,
+    "seen": 1788019041.187028,
+    "ast_hash": "421ac3b4954e3893a88d0c99fed58bc0",
+    "semantic_hash": "421ac3b4954e3893a88d0c99fed58bc0"
+  },
+  "demo/scenario-1-ingest/files/src/cache/session.py": {
+    "mtime": 1788015748.4914463,
+    "seen": 1788019041.187029,
+    "ast_hash": "76610afb11ac3b8f10facc7fed84cce7",
+    "semantic_hash": "76610afb11ac3b8f10facc7fed84cce7"
+  },
+  "demo/scenario-2-violation/files/src/cache/__init__.py": {
+    "mtime": 1788015748.4921122,
+    "seen": 1788019041.187029,
+    "ast_hash": "421ac3b4954e3893a88d0c99fed58bc0",
+    "semantic_hash": "421ac3b4954e3893a88d0c99fed58bc0"
+  },
+  "demo/scenario-2-violation/files/src/cache/session.py": {
+    "mtime": 1788015748.4940705,
+    "seen": 1788019041.18703,
+    "ast_hash": "ca74fc1d3414349efce29766633814d0",
+    "semantic_hash": "ca74fc1d3414349efce29766633814d0"
+  },
+  "sandbox/fitness/_fitness_common.py": {
+    "mtime": 1788015748.5099373,
+    "seen": 1788019041.187031,
+    "ast_hash": "4cf9582a3b8b0a49c72359a0db3979ff",
+    "semantic_hash": "4cf9582a3b8b0a49c72359a0db3979ff"
+  },
+  "sandbox/fitness/check_import_boundaries.py": {
+    "mtime": 1788018574.0202503,
+    "seen": 1788019041.187031,
+    "ast_hash": "27e883cfe71c4f07b022be4d10517fa6",
+    "semantic_hash": "27e883cfe71c4f07b022be4d10517fa6"
+  },
+  "sandbox/fitness/fitness_rules.json": {
+    "mtime": 1788015748.5102441,
+    "seen": 1788019041.187032,
+    "ast_hash": "a75cd452d1e70cbd6f4e852279959987",
+    "semantic_hash": "a75cd452d1e70cbd6f4e852279959987"
+  },
+  ".github/pull_request_template.md": {
+    "mtime": 1788015748.4614456,
+    "seen": 1788019041.187032,
+    "ast_hash": "934f6646833314f0e1f5c172ad3fe82b",
+    "semantic_hash": "934f6646833314f0e1f5c172ad3fe82b"
+  },
+  ".github/workflows/README.md": {
+    "mtime": 1788015748.4622405,
+    "seen": 1788019041.1870332,
+    "ast_hash": "314d06b7e9f8c77f5a5bd0449496028b",
+    "semantic_hash": "314d06b7e9f8c77f5a5bd0449496028b"
+  },
+  ".github/workflows/cortex-detect.yml": {
+    "mtime": 1788015748.4633029,
+    "seen": 1788019041.1870341,
+    "ast_hash": "81bdf51bb9812db16ccce400b052f133",
+    "semantic_hash": "81bdf51bb9812db16ccce400b052f133"
+  },
+  ".github/workflows/cortex-ingest.yml": {
+    "mtime": 1788018180.9805548,
+    "seen": 1788019041.1870341,
+    "ast_hash": "f45938bab517038d9211b50f5716dfce",
+    "semantic_hash": "f45938bab517038d9211b50f5716dfce"
+  },
+  "TASKS.md": {
+    "mtime": 1788018337.5442824,
+    "seen": 1788019041.1870348,
+    "ast_hash": "ba673a2471e89d92683f15483f21ccf5",
+    "semantic_hash": "ba673a2471e89d92683f15483f21ccf5"
+  },
+  "cortex-vector-mcp/README.md": {
+    "mtime": 1788018180.9809175,
+    "seen": 1788019041.1870358,
+    "ast_hash": "3426a566cce9fb941fb97e3e5009b884",
+    "semantic_hash": "3426a566cce9fb941fb97e3e5009b884"
+  },
+  "cortex-vector-mcp/requirements.txt": {
+    "mtime": 1788015748.480716,
+    "seen": 1788019041.1870358,
+    "ast_hash": "7e3e06a98821aa9998736ff8c31bc26f",
+    "semantic_hash": "7e3e06a98821aa9998736ff8c31bc26f"
+  },
+  "dashboard.html": {
+    "mtime": 1788015748.4842587,
+    "seen": 1788019041.187037,
+    "ast_hash": "2a82b6217582600167c6e47853615977",
+    "semantic_hash": "2a82b6217582600167c6e47853615977"
+  },
+  "demo/fixtures/base/requirements.txt": {
+    "mtime": 1788015748.4870524,
+    "seen": 1788019041.187037,
+    "ast_hash": "27c66e70d24ada5f7dcccdb44c826936",
+    "semantic_hash": "27c66e70d24ada5f7dcccdb44c826936"
+  },
+  "demo/scenario-1-ingest/files/requirements.txt": {
+    "mtime": 1788015748.4909623,
+    "seen": 1788019041.187038,
+    "ast_hash": "8a3f90c7a573cee9b0fab4bae0843b7c",
+    "semantic_hash": "8a3f90c7a573cee9b0fab4bae0843b7c"
+  },
+  "demo/scenario-2-violation/files/requirements.txt": {
+    "mtime": 1788015748.4919417,
+    "seen": 1788019041.187039,
+    "ast_hash": "27c66e70d24ada5f7dcccdb44c826936",
+    "semantic_hash": "27c66e70d24ada5f7dcccdb44c826936"
+  },
+  "docs/ADR-001-codebase-cortex.md": {
+    "mtime": 1788015748.496734,
+    "seen": 1788019041.187039,
+    "ast_hash": "01256a01a8f6cf788d1b015be8bb6571",
+    "semantic_hash": "01256a01a8f6cf788d1b015be8bb6571"
+  },
+  "docs/ARCHITECTURE.md": {
+    "mtime": 1788015748.497167,
+    "seen": 1788019041.18704,
+    "ast_hash": "c70f75389bde78ad15ff0776419922d7",
+    "semantic_hash": "c70f75389bde78ad15ff0776419922d7"
+  },
+  "docs/TRUEFORGE-API-FINDINGS.md": {
+    "mtime": 1788018180.981548,
+    "seen": 1788019041.18704,
+    "ast_hash": "d7e8899a552887c7ac879e228fa9e691",
+    "semantic_hash": "d7e8899a552887c7ac879e228fa9e691"
+  },
+  "docs/adr/ADR-002-distributed-cache-redis.md": {
+    "mtime": 1788015748.4976354,
+    "seen": 1788019041.187041,
+    "ast_hash": "e6c133523470fbb2d65936858bd33988",
+    "semantic_hash": "e6c133523470fbb2d65936858bd33988"
+  },
+  "docs/adr/ADR-003-event-driven-architecture.md": {
+    "mtime": 1788015748.497792,
+    "seen": 1788019041.187042,
+    "ast_hash": "0d558ca903e7f526780a9435c8edd9a7",
+    "semantic_hash": "0d558ca903e7f526780a9435c8edd9a7"
+  },
+  "hackathon-docs/00-index.md": {
+    "mtime": 1788015748.5000792,
+    "seen": 1788019041.187042,
+    "ast_hash": "b8effb0a6c8b2d8c8cee8e5b5af438a9",
+    "semantic_hash": "b8effb0a6c8b2d8c8cee8e5b5af438a9"
+  },
+  "hackathon-docs/01-overview.md": {
+    "mtime": 1788015748.5028853,
+    "seen": 1788019041.1870432,
+    "ast_hash": "77fda012fb58ad7b4b9bbc8c8ed8ca3c",
+    "semantic_hash": "77fda012fb58ad7b4b9bbc8c8ed8ca3c"
+  },
+  "hackathon-docs/02-rules.md": {
+    "mtime": 1788015748.5059168,
+    "seen": 1788019041.1870432,
+    "ast_hash": "cca976da5c1a7d8503aa2e8d6025c67b",
+    "semantic_hash": "cca976da5c1a7d8503aa2e8d6025c67b"
+  },
+  "hackathon-docs/03-prizes.md": {
+    "mtime": 1788015748.5066667,
+    "seen": 1788019041.1870441,
+    "ast_hash": "083a16f521230caf882290509fe981e1",
+    "semantic_hash": "083a16f521230caf882290509fe981e1"
+  },
+  "hackathon-docs/04-trueforge-getting-started.md": {
+    "mtime": 1788015748.5069132,
+    "seen": 1788019041.1870441,
+    "ast_hash": "0045ab8b846b5b3618c037e37276832b",
+    "semantic_hash": "0045ab8b846b5b3618c037e37276832b"
+  },
+  "hackathon-docs/05-qodo-guide.md": {
+    "mtime": 1788015748.5071256,
+    "seen": 1788019041.187045,
+    "ast_hash": "e010b90f0dd26fcf5f2360aa08980fe6",
+    "semantic_hash": "e010b90f0dd26fcf5f2360aa08980fe6"
+  },
+  "hackathon-docs/06-qodo-agent-skills.md": {
+    "mtime": 1788015748.5073392,
+    "seen": 1788019041.1870458,
+    "ast_hash": "4a271cadab28e8e5f164a0fd552124e8",
+    "semantic_hash": "4a271cadab28e8e5f164a0fd552124e8"
+  },
+  "hackathon-docs/07-resources.md": {
+    "mtime": 1788015748.5075266,
+    "seen": 1788019041.1870458,
+    "ast_hash": "f3304c71244eb0304b333363d75793ba",
+    "semantic_hash": "f3304c71244eb0304b333363d75793ba"
+  },
+  "skills/cortex-detect/SKILL.md": {
+    "mtime": 1788015748.5106351,
+    "seen": 1788019041.187047,
+    "ast_hash": "9bfc7250e0d19a500b73baf50af4830e",
+    "semantic_hash": "9bfc7250e0d19a500b73baf50af4830e"
+  },
+  "skills/cortex-explain/SKILL.md": {
+    "mtime": 1788015748.5109227,
+    "seen": 1788019041.187047,
+    "ast_hash": "4c0daa38c596e99f6492150b27ed61ae",
+    "semantic_hash": "4c0daa38c596e99f6492150b27ed61ae"
+  },
+  "skills/cortex-ingest/SKILL.md": {
+    "mtime": 1788015748.5112016,
+    "seen": 1788019041.187048,
+    "ast_hash": "b9dc3537a8f63911a63937e4e042743a",
+    "semantic_hash": "b9dc3537a8f63911a63937e4e042743a"
+  },
+  "skills/cortex-notify/SKILL.md": {
+    "mtime": 1788015748.511491,
+    "seen": 1788019041.187049,
+    "ast_hash": "818a0ed550481cab68ed6dcdc3b036e0",
+    "semantic_hash": "818a0ed550481cab68ed6dcdc3b036e0"
+  },
+  "skills/qodo-get-rules/SKILL.md": {
+    "mtime": 1788015748.511807,
+    "seen": 1788019041.1870499,
+    "ast_hash": "243e86e02b77da5fbe45492f2194294b",
+    "semantic_hash": "243e86e02b77da5fbe45492f2194294b"
+  },
+  "skills/qodo-pr-resolver/SKILL.md": {
+    "mtime": 1788015748.5122085,
+    "seen": 1788019041.1870499,
+    "ast_hash": "156424b72b14119caf6563b5fae99f53",
+    "semantic_hash": "156424b72b14119caf6563b5fae99f53"
+  },
+  "skills/qodo-pr-resolver/reference.md": {
+    "mtime": 1788015748.5124662,
+    "seen": 1788019041.187051,
+    "ast_hash": "6ab1565b2772f6e5a10e212fb10836e4",
+    "semantic_hash": "6ab1565b2772f6e5a10e212fb10836e4"
+  }
+}

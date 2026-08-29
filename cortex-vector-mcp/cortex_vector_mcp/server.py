@@ -27,6 +27,10 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
+from starlette.requests import Request
+from starlette.responses import JSONResponse
+
+from .explain import explain_query, trace_adr_lineage
 from .store import DEFAULT_THRESHOLD, Store
 
 log = logging.getLogger(__name__)
@@ -84,6 +88,23 @@ def searchDecisions(
         query, paths=paths, threshold=threshold, limit=limit, include_superseded=include_superseded
     )
     return {"candidates": candidates, "count": len(candidates)}
+
+
+@mcp.tool()
+def explainDecision(
+    query: str,
+    paths: list[str] | None = None,
+    threshold: float = 0.50,
+) -> dict[str, Any]:
+    """Execute natural language Q&A query over ADR lineage (cortex-explain)."""
+    return explain_query(get_store(), query=query, paths=paths, threshold=threshold)
+
+
+@mcp.tool()
+def traceLineage(adr_id: str) -> dict[str, Any]:
+    """Trace multi-hop lineage (oldest -> newest) for a specific ADR ID."""
+    chain = trace_adr_lineage(get_store(), adr_id=adr_id)
+    return {"adr_id": adr_id, "chain": [a.to_dict() for a in chain], "count": len(chain)}
 
 
 @mcp.tool()
@@ -164,3 +185,26 @@ def healthcheck() -> dict[str, Any]:
 
 #: ASGI app for `uvicorn cortex_vector_mcp.server:app`. Rooted at /mcp.
 app = mcp.streamable_http_app()
+
+
+async def api_explain_endpoint(request: Request) -> JSONResponse:
+    """HTTP REST endpoint for cortex-explain query engine (used by CLI / Web Dashboard)."""
+    if request.method == "POST":
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        query = body.get("question") or body.get("query") or ""
+        paths = body.get("paths")
+        threshold = float(body.get("threshold", 0.50))
+    else:
+        query = request.query_params.get("question") or request.query_params.get("q") or ""
+        paths_param = request.query_params.get("paths")
+        paths = paths_param.split(",") if paths_param else None
+        threshold = float(request.query_params.get("threshold", 0.50))
+
+    res = explain_query(get_store(), query=query, paths=paths, threshold=threshold)
+    return JSONResponse(res)
+
+
+app.add_route("/api/explain", api_explain_endpoint, methods=["GET", "POST"])
