@@ -65,7 +65,8 @@ jobs:
         with:
           python-version: "3.12"
           # `cache: pip` is deliberately omitted: it hard-fails when no requirements
-          # file matches, and cortex-vector-mcp/ may not be present yet. Cached below.
+          # file matches the invoking path. The pip cache is keyed manually on
+          # cortex-vector-mcp/requirements.txt below.
 
       - name: Cache pip wheels
         uses: actions/cache@v4
@@ -74,6 +75,15 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('cortex-vector-mcp/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
+
+      # ChromaDB fetches its MiniLM embedding model (~80MB) on the first
+      # embedding. Cache ~/.cache/chroma across runs so the one-time download
+      # does not stall every cold start; the seed step below warms it.
+      - name: Cache chroma embedding model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/chroma
+          key: ${{ runner.os }}-chroma-minilm
 
       - name: Make cortex CLI executable
         run: chmod +x bin/cortex # git does not always preserve the mode bit
@@ -96,12 +106,29 @@ jobs:
           python -m pip install -r cortex-vector-mcp/requirements.txt
           echo "present=true" >> "$GITHUB_OUTPUT"
 
+      # Seed vector memory before the server starts: ChromaDB does not support two
+      # processes writing the same PersistentClient directory, so the indexer
+      # must finish (and close its handle) first. Upserts are keyed on ADR id,
+      # so re-running across PRs is safe. The first seed also warms the MiniLM
+      # embedding model (~80MB, cached in ~/.cache/chroma).
+      - name: Seed ADR vector store (cold-start indexer)
+        if: steps.vector.outputs.present == 'true'
+        env:
+          CORTEX_CHROMA_DIR: ${{ runner.temp }}/cortex-chroma
+        run: |
+          set -euo pipefail
+          cd cortex-vector-mcp
+          python -m cortex_vector_mcp.indexer \
+            --adr-dir ../docs/adr \
+            --persist-dir "$CORTEX_CHROMA_DIR" \
+            || echo "::warning::cold-start indexer failed - the store fills up as ingest runs"
+
       - name: Start cortex-vector MCP service (port 9001)
         if: steps.vector.outputs.present == 'true'
         env:
           CHROMA_API_KEY: ${{ secrets.CHROMA_API_KEY }} # only needed for Chroma Cloud
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} # embeddings, if the service uses them
-          CORTEX_CHROMA_DIR: ${{ runner.temp }}/cortex-chroma # shared with the cold-start indexer below
+          CORTEX_CHROMA_DIR: ${{ runner.temp }}/cortex-chroma # the directory the seed step wrote
         run: |
           set -euo pipefail
           cd cortex-vector-mcp
@@ -116,21 +143,6 @@ jobs:
           nohup python -m uvicorn "$APP" --host 127.0.0.1 --port 9001 \
             > "$RUNNER_TEMP/cortex-vector.log" 2>&1 &
           echo "started $APP (pid $!)"
-
-      # Seed vector memory with the ADRs already in the tree so searchDecisions
-      # / supersede detection have a corpus before the agent's first tool call.
-      # Upserts are keyed on ADR id, so re-running across PRs is safe.
-      - name: Seed ADR vector store (cold-start indexer)
-        if: steps.vector.outputs.present == 'true'
-        env:
-          CORTEX_CHROMA_DIR: ${{ runner.temp }}/cortex-chroma
-        run: |
-          set -euo pipefail
-          cd cortex-vector-mcp
-          python -m cortex_vector_mcp.indexer \
-            --adr-dir ../docs/adr \
-            --persist-dir "$CORTEX_CHROMA_DIR" \
-            || echo "::warning::cold-start indexer failed - the store fills up as ingest runs"
 
       # TrueForge is a server, not a CLI (findings §1). Start it detached; the readiness
       # gate below is what makes a failure here diagnosable instead of a mystery timeout.

@@ -61,7 +61,7 @@ def searchDecisions(
     threshold: float = DEFAULT_THRESHOLD,
     limit: int = 5,
     include_superseded: bool = False,
-) -> list[dict[str, Any]]:
+) -> dict[str, Any]:
     """Retrieve candidate ADRs above a cosine-similarity threshold.
 
     Args:
@@ -74,11 +74,16 @@ def searchDecisions(
             (only live policy binds a PR); explanation wants True.
 
     Returns:
-        `[{adr, similarity, backend, semantic}, ...]`, most similar first.
+        `{"candidates": [{adr, similarity, backend, semantic}, ...]}` (most
+        similar first) plus `count`. Wrapped in an object on purpose: FastMCP
+        v1 flattens a returned list into one content block per item, which
+        turns a single candidate into a bare object - an object wrapper keeps
+        the shape stable for every caller.
     """
-    return get_store().search_decisions(
+    candidates = get_store().search_decisions(
         query, paths=paths, threshold=threshold, limit=limit, include_superseded=include_superseded
     )
+    return {"candidates": candidates, "count": len(candidates)}
 
 
 @mcp.tool()
