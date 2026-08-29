@@ -2,7 +2,7 @@
 
 ## Active
 
-- [ ] **Initialize TrueForge Core Harness & MCP Connectors** - Configure `agent.json` with model provider, tools, and subagents
+- [x] **Initialize TrueForge Core Harness & MCP Connectors** - Configure `agent.json` with model provider, tools, and subagents
   - [x] Verify `@truefoundry/trueforge` CLI / SDK installation and runtime — v0.1.4 installs & runs; **no CLI runner exists** (server-only, REST on :8790). See `docs/TRUEFORGE-API-FINDINGS.md`
   - [x] Rewrite `agent.json` to the real `AgentSpec` schema — `{name, manifest:{model, instructions, mcp_servers, skills, config}}` matches `CreateAgentRequest` per the live OpenAPI
   - [x] Configure GitHub MCP connector (`readDiff`, `postComment`, `upsertComment`, `readIssue`, `readCODEOWNERS`) — only the **remote** `github` MCP is usable (`api.githubcopilot.com/mcp/`); registered via `bin/cortex` `ensureGithubMcp` and the workflow's provisioning step (auth shape: `{type:"header", headers:{Authorization: "Bearer …"}}`)
@@ -73,7 +73,7 @@
 
 ## Waiting On
 
-- [ ] **Direction on TrueForge integration shape** — the repo's design assumes a `trueforge run agent.json --skill X --input Y` CLI and three stdio MCP connectors. **None of these exist in v0.1.4.** Full verified gap analysis in `docs/TRUEFORGE-API-FINDINGS.md`. Needs a call on: (a) how CI invokes the agent, (b) where the vector-search logic lives, (c) which tasks to prioritise before the deadline.
+- [x] **Direction on TrueForge integration shape** — the repo's design assumes a `trueforge run agent.json --skill X --input Y` CLI and three stdio MCP connectors. **None of these exist in v0.1.4.** Full verified gap analysis in `docs/TRUEFORGE-API-FINDINGS.md`. Needs a call on: (a) how CI invokes the agent, (b) where the vector-search logic lives, (c) which tasks to prioritise before the deadline.
 
 ## Someday
 
