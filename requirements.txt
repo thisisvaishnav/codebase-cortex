@@ -4,4 +4,3 @@ pydantic==2.13.4
 psycopg[binary]==3.2.12
 PyJWT==2.11.0
 python-dotenv==1.2.1
-redis==5.2.1
