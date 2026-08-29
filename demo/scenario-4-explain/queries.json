@@ -1,0 +1,17 @@
+[
+  {
+    "query": "Why did we choose Redis over Postgres for session persistence?",
+    "expected_adr": "ADR-002",
+    "expected_author": "senior-dev",
+    "expected_status": "ACTIVE"
+  },
+  {
+    "query": "What is our architecture policy on in-process session memory?",
+    "expected_adr": "ADR-002",
+    "expected_invariant": "Session state and token blacklists MUST never be stored in process memory."
+  },
+  {
+    "query": "Show active vs superseded ADR lineage for session persistence",
+    "expected_chain": ["ADR-002"]
+  }
+]

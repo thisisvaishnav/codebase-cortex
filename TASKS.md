@@ -53,23 +53,23 @@
   - [x] Replace both run steps with a working invocation path — our own CLI wrapper `bin/cortex` drives `/api/v1` directly (verified against the live OpenAPI; see `docs/TRUEFORGE-API-FINDINGS.md`)
   - [x] Configure GitHub secrets (`ANTHROPIC_API_KEY`/`OPENAI_API_KEY`, `CORTEX_GITHUB_PAT`, `TF_API_KEY`, `CHROMA_API_KEY`) and confirm `actions/cache` keys — set these in repo Settings; see `.github/workflows/README.md`
 
-- [ ] **Develop Web Dashboard & Visual Lineage UI** - Interactive frontend for visualization and demo
-  - Scaffold React + Tailwind CSS dashboard project (Vite / Next.js)
-  - Build interactive ADR Visual Timeline & Superseded Lineage graph
-  - Build Real-time Maintainer Violation & Drift Feed component
-  - Build NL Question-Answering console ("Why did we choose Redis over Postgres?")
-  - Wire REST / SSE communication to local TrueForge daemon on port `8790`
+- [x] **Develop Web Dashboard & Visual Lineage UI** - Interactive frontend for visualization and demo
+  - [x] Scaffold React + Tailwind CSS dashboard project (Vite / Next.js) — `dashboard-ui/`
+  - [x] Build interactive ADR Visual Timeline & Superseded Lineage graph — `src/components/LineageGraph.jsx`
+  - [x] Build Real-time Maintainer Violation & Drift Feed component — `src/components/ViolationFeed.jsx`
+  - [x] Build NL Question-Answering console ("Why did we choose Redis over Postgres?") — `src/components/ExplainConsole.jsx`
+  - [x] Wire REST / SSE communication to local TrueForge daemon on port `8790` — `src/services/api.js` & `src/components/SseDebugger.jsx`
 
 - [x] **Configure Daytona Sandbox Environment** - Isolated runtime for safe execution
   - [x] Configure Daytona workspace definition for architectural fitness function execution — standard python environment execution
   - [x] Write sample fitness test scripts checking import boundaries and banned dependencies — `sandbox/fitness/check_import_boundaries.py`, `sandbox/fitness/check_banned_dependencies.py`, `sandbox/fitness/run_all.py`
   - [x] Connect sandbox execution bridge to `cortex-detect` evaluation flow — wired into `cortex-detect` skill workflow
 
-- [ ] **Prepare Test Scenarios & Hackathon Demo Suite** - End-to-end verification
-  - Create Demo Scenario 1: Senior dev merges PR introducing Redis cache -> ADR-002 auto-indexed
-  - Create Demo Scenario 2: Junior dev opens PR replacing Redis with in-memory map -> `cortex-detect` flags violation, tags `@senior-dev`
-  - Create Demo Scenario 3: Contributor opens Issue proposing architecture change -> pre-flight warning posted
-  - Create Demo Scenario 4: Natural language queries on Dashboard demonstrating decision recall and lineage
+- [x] **Prepare Test Scenarios & Hackathon Demo Suite** - End-to-end verification — `demo/run_demo_suite.py`
+  - [x] Create Demo Scenario 1: Senior dev merges PR introducing Redis cache -> ADR-002 auto-indexed
+  - [x] Create Demo Scenario 2: Junior dev opens PR replacing Redis with in-memory map -> `cortex-detect` flags violation, tags `@senior-dev`
+  - [x] Create Demo Scenario 3: Contributor opens Issue proposing architecture change -> pre-flight warning posted
+  - [x] Create Demo Scenario 4: Natural language queries on Dashboard demonstrating decision recall and lineage
 
 ## Waiting On
 
