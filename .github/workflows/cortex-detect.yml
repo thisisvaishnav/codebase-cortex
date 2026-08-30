@@ -234,7 +234,7 @@ jobs:
       # Qodo judges code quality; Cortex judges architectural integrity. Independent.
       - name: Run Qodo Code Review
         if: github.event_name == 'pull_request'
-        uses: qodo-ai/qodo-merge-action@v1
+        uses: qodo-ai/pr-agent@main
         continue-on-error: true
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

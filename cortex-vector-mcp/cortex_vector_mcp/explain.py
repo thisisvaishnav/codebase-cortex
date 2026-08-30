@@ -137,7 +137,7 @@ def explain_query(
     store: Store,
     query: str,
     paths: list[str] | None = None,
-    threshold: float = 0.50,
+    threshold: float = 0.20,
 ) -> dict[str, Any]:
     """Execute natural language Q&A query over ADR lineage.
 
@@ -145,13 +145,11 @@ def explain_query(
         store: vector store.
         query: developer's natural language question.
         paths: optional path filters/scope hints.
-        threshold: retrieval similarity floor (default 0.50 for high recall).
+        threshold: retrieval similarity floor (default 0.20 for high recall).
 
     Returns:
         Dict with keys: `answer`, `lineage`, `candidates`, `query`.
     """
-    # Lexical TF-IDF vectors have lower raw magnitude than dense MiniLM embeddings;
-    # calibrate threshold when running on the lexical fallback backend.
     effective_threshold = 0.10 if store.backend == "lexical" else threshold
 
     candidates = store.search_decisions(

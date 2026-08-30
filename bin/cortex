@@ -26,6 +26,43 @@
 
 'use strict';
 
+const fs = require('node:fs');
+const path = require('node:path');
+
+function loadDotEnv() {
+  const envPaths = [
+    path.resolve(__dirname, '..', '.env'),
+    path.resolve(process.cwd(), '.env'),
+  ];
+  for (const envPath of envPaths) {
+    if (fs.existsSync(envPath)) {
+      try {
+        const content = fs.readFileSync(envPath, 'utf8');
+        for (const line of content.split('\n')) {
+          const trimmed = line.trim();
+          if (!trimmed || trimmed.startsWith('#')) continue;
+          const cleanLine = trimmed.startsWith('export ') ? trimmed.slice(7).trim() : trimmed;
+          const eqIdx = cleanLine.indexOf('=');
+          if (eqIdx === -1) continue;
+          const key = cleanLine.slice(0, eqIdx).trim();
+          let val = cleanLine.slice(eqIdx + 1).trim();
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+          }
+          if (!process.env[key]) {
+            process.env[key] = val;
+          }
+        }
+      } catch {
+        /* ignore read error */
+      }
+      break;
+    }
+  }
+}
+
+loadDotEnv();
+
 const TF_URL = (process.env.TF_URL || 'http://localhost:8790').replace(/\/$/, '');
 const API = `${TF_URL}/api/v1`;
 const VECTOR_URL = process.env.CORTEX_VECTOR_URL || 'http://localhost:9001/mcp';
@@ -272,7 +309,7 @@ async function setup() {
 /** Create a session, post one turn, stream it to completion, return the text. */
 async function runTurn(prompt) {
   const session = await api('POST', '/sessions', { agent: { name: AGENT_NAME } });
-  const sid = session.id || (session.session && session.session.id);
+  const sid = session.id || (session.session && session.session.id) || (session.data && session.data.id);
   if (!sid) die(`could not read session id from: ${JSON.stringify(session).slice(0, 300)}`);
   log(`session: ${sid}`);
 
@@ -280,7 +317,7 @@ async function runTurn(prompt) {
     input: [{ type: 'user.message', content: prompt }],
     stream: false,
   });
-  const tid = turn.turn_id || turn.id;
+  const tid = turn.turn_id || turn.id || (turn.data && turn.data.id);
   log(`turn: ${tid}`);
 
   const final = await pollTurn(sid, tid);
@@ -293,7 +330,7 @@ async function pollTurn(sid, tid, timeoutMs = 15 * 60_000) {
   let lastStatus = '';
   while (Date.now() < deadline) {
     const res = await api('GET', `/sessions/${sid}/turns/${tid}`);
-    const turn = res.turn || res;
+    const turn = res.turn || res.data || res;
     const state = turn.state || {};
     const status = state.type || state.status || 'unknown';
     if (status !== lastStatus) {
