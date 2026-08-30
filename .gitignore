@@ -21,3 +21,7 @@ chromadb_data/
 # Node (bin/cortex deps are npx-managed; nothing vendored at the root)
 node_modules/
 .npm/
+# Environment secrets - never commit
+.env
+.env.*
+!.env.example

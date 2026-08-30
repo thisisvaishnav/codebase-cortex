@@ -98,11 +98,29 @@ jobs:
           python -m pip install -r cortex-vector-mcp/requirements.txt
           echo "present=true" >> "$GITHUB_OUTPUT"
 
+      - name: Seed ADR vector store (cold-start indexer)
+        if: steps.vector.outputs.present == 'true'
+        env:
+          CORTEX_CHROMA_DIR: ${{ runner.temp }}/cortex-chroma
+        run: |
+          set -euo pipefail
+          cd cortex-vector-mcp
+          # Seed docs/adr/ (ADR-002, ADR-003) first, then docs/ root (ADR-001).
+          python -m cortex_vector_mcp.indexer \
+            --adr-dir ../docs/adr \
+            --persist-dir "$CORTEX_CHROMA_DIR" \
+            || echo "::warning::cold-start indexer failed on docs/adr/"
+          python -m cortex_vector_mcp.indexer \
+            --adr-dir ../docs \
+            --persist-dir "$CORTEX_CHROMA_DIR" \
+            || echo "::warning::cold-start indexer failed on docs/ root"
+
       - name: Start cortex-vector MCP service (port 9001)
         if: steps.vector.outputs.present == 'true'
         env:
           CHROMA_API_KEY: ${{ secrets.CHROMA_API_KEY }} # only needed for Chroma Cloud
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }} # embeddings, if the service uses them
+          CORTEX_CHROMA_DIR: ${{ runner.temp }}/cortex-chroma # the directory the seed step wrote
         run: |
           set -euo pipefail
           cd cortex-vector-mcp

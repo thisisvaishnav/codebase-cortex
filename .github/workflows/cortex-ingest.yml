@@ -118,10 +118,15 @@ jobs:
         run: |
           set -euo pipefail
           cd cortex-vector-mcp
+          # Seed docs/adr/ (ADR-002, ADR-003) first, then docs/ root (ADR-001).
           python -m cortex_vector_mcp.indexer \
             --adr-dir ../docs/adr \
             --persist-dir "$CORTEX_CHROMA_DIR" \
-            || echo "::warning::cold-start indexer failed - the store fills up as ingest runs"
+            || echo "::warning::cold-start indexer failed on docs/adr/"
+          python -m cortex_vector_mcp.indexer \
+            --adr-dir ../docs \
+            --persist-dir "$CORTEX_CHROMA_DIR" \
+            || echo "::warning::cold-start indexer failed on docs/ root"
 
       - name: Start cortex-vector MCP service (port 9001)
         if: steps.vector.outputs.present == 'true'

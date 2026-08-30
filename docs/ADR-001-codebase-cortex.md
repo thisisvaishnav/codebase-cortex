@@ -1,7 +1,9 @@
 # ADR-001: Codebase Cortex — Architecture Decision Record
 
-**Status:** Accepted  
+**Status:** ACTIVE  
 **Date:** 2026-08-29  
+**Author:** @lead-maintainer  
+**Merged in PR:** #1  
 **Hackathon:** The Agent Harness Hackathon — WeMakeDevs × TrueFoundry  
 **Deadline:** August 30, 2026 at 8:00 PM London time  
 
@@ -21,6 +23,15 @@ When a senior developer leaves or steps away, the institutional knowledge — th
 
 > A TrueForge agent that catches architectural violations in PRs & issues, preserves institutional memory, and proactively alerts maintainers when foundational architecture is touched or altered.
 
+## Rationale
+
+Preserve institutional memory and enforce architectural integrity across pull requests and issues using TrueForge agents and Qodo review rules.
+
+## Invariants
+
+- **Rule:** Architectural decisions MUST be captured as markdown records in docs/adr/ and stored in vector memory.
+- **Rule:** Pull requests modifying architectural scope MUST be checked against vector memory before merging.
+
 ---
 
 ## The Demo Moments (Everything is designed around this)
@@ -31,10 +42,10 @@ When a senior developer leaves or steps away, the institutional knowledge — th
 3. Three months later, a new developer opens a PR replacing Redis with an in-memory cache.
 4. **Two comments appear on the PR within 60 seconds:**
    - **Qodo:** Code quality, security, and repository standards review.
-   - **Codebase Cortex (TrueForge agent):** *"⚠️ Architectural Conflict Detected: This contradicts ADR-003 by @senior-dev. In-memory caching loses session data on pod restart. Pinging @repo-maintainers @senior-dev for architectural review."*
+   - **Codebase Cortex (TrueForge agent):** *"⚠️ Architectural Conflict Detected: This contradicts ADR-002 by @senior-dev. In-memory caching loses session data on pod restart. Pinging @repo-maintainers @senior-dev for architectural review."*
 
 ### Demo Moment 2: Issue Pre-flight & Merge Drift Alert
-1. A contributor opens an Issue proposing to remove Redis. Cortex automatically scans the proposal, references ADR-003, and notifies the maintainers before code is written.
+1. A contributor opens an Issue proposing to remove Redis. Cortex automatically scans the proposal, references ADR-002, and notifies the maintainers before code is written.
 2. If a PR intentionally changes or supersedes an ADR upon merge, Cortex triggers a **Maintainer Drift Alert** tagging `@repo-maintainers` to confirm the architectural evolution.
 
 ---
@@ -169,7 +180,7 @@ Qodo is the **code intelligence layer** that understands the full repository con
 
 1. **Trigger:** Issue opened proposing a refactor or architectural change (`issues.opened`).
 2. **Action:** TrueForge scans the issue description against architectural memory in ChromaDB.
-3. **Execution:** Posts historical context as an issue comment: *"Before starting: ADR-003 outlines why Redis was chosen over in-memory. Pinging @senior-dev."*
+3. **Execution:** Posts historical context as an issue comment: *"Before starting: ADR-002 outlines why Redis was chosen over in-memory. Pinging @senior-dev."*
 
 ### Flow 4: Natural Language ADR Querying (Dashboard / Chat)
 
@@ -211,7 +222,7 @@ Qodo is the **code intelligence layer** that understands the full repository con
 
 This change appears to contradict a foundational architectural decision.
 
-- **Violated Decision:** [ADR-003: Redis for Distributed Session Persistence](docs/adr/ADR-003-distributed-cache-redis.md)
+- **Violated Decision:** [ADR-002: Redis for Distributed Session Persistence](docs/adr/ADR-002-distributed-cache-redis.md)
 - **Original Reasoning (by @senior-dev · 3 months ago):** Redis was selected over in-memory caching because the service must survive Kubernetes pod restarts without session loss.
 - **Confidence Score:** 91% (Hard Violation)
 - **Files Affected:** `src/cache/session.py`
