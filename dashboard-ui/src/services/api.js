@@ -18,21 +18,10 @@ export async function checkTrueForgeHealth() {
 
 export async function checkVectorHealth() {
   try {
-    const res = await fetch(`${VECTOR_BASE}/mcp`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'tools/call',
-        params: { name: 'healthcheck', arguments: {} },
-      }),
-    });
+    const res = await fetch(`${VECTOR_BASE}/api/health`, { method: 'GET' });
     if (!res.ok) return { ok: false, error: `HTTP ${res.status}` };
     const data = await res.json();
-    const text = data.result?.content?.[0]?.text;
-    const parsed = text ? JSON.parse(text) : {};
-    return { ok: true, data: parsed };
+    return { ok: true, data };
   } catch (err) {
     return { ok: false, error: err.message };
   }
@@ -59,19 +48,11 @@ export async function explainQuery(question, paths = null) {
 
 export async function fetchListDecisions(includeSuperseded = true) {
   try {
-    const res = await fetch(`${VECTOR_BASE}/mcp`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'tools/call',
-        params: { name: 'listDecisions', arguments: { include_superseded: includeSuperseded } },
-      }),
+    const res = await fetch(`${VECTOR_BASE}/api/decisions?include_superseded=${includeSuperseded}`, {
+      method: 'GET',
     });
-    const data = await res.json();
-    const text = data.result?.content?.[0]?.text;
-    return text ? JSON.parse(text) : [];
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
   } catch (err) {
     console.error('fetchListDecisions error:', err);
     return [];
@@ -80,19 +61,11 @@ export async function fetchListDecisions(includeSuperseded = true) {
 
 export async function traceLineage(adrId) {
   try {
-    const res = await fetch(`${VECTOR_BASE}/mcp`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'tools/call',
-        params: { name: 'traceLineage', arguments: { adr_id: adrId } },
-      }),
+    const res = await fetch(`${VECTOR_BASE}/api/lineage/${encodeURIComponent(adrId)}`, {
+      method: 'GET',
     });
-    const data = await res.json();
-    const text = data.result?.content?.[0]?.text;
-    return text ? JSON.parse(text) : { chain: [] };
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
   } catch (err) {
     console.error('traceLineage error:', err);
     return { chain: [] };

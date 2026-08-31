@@ -27,6 +27,7 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
+from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
@@ -186,6 +187,14 @@ def healthcheck() -> dict[str, Any]:
 #: ASGI app for `uvicorn cortex_vector_mcp.server:app`. Rooted at /mcp.
 app = mcp.streamable_http_app()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 async def api_explain_endpoint(request: Request) -> JSONResponse:
     """HTTP REST endpoint for cortex-explain query engine (used by CLI / Web Dashboard)."""
@@ -207,4 +216,25 @@ async def api_explain_endpoint(request: Request) -> JSONResponse:
     return JSONResponse(res)
 
 
+async def api_health_endpoint(request: Request) -> JSONResponse:
+    """HTTP REST endpoint for health checks."""
+    return JSONResponse(healthcheck())
+
+
+async def api_decisions_endpoint(request: Request) -> JSONResponse:
+    """HTTP REST endpoint for listing decisions."""
+    inc_param = request.query_params.get("include_superseded", "true").lower()
+    include_superseded = inc_param in ("true", "1", "yes")
+    return JSONResponse(listDecisions(include_superseded=include_superseded))
+
+
+async def api_lineage_endpoint(request: Request) -> JSONResponse:
+    """HTTP REST endpoint for tracing lineage."""
+    adr_id = request.path_params.get("adr_id") or request.query_params.get("adr_id", "")
+    return JSONResponse(traceLineage(adr_id=adr_id))
+
+
 app.add_route("/api/explain", api_explain_endpoint, methods=["GET", "POST"])
+app.add_route("/api/health", api_health_endpoint, methods=["GET"])
+app.add_route("/api/decisions", api_decisions_endpoint, methods=["GET"])
+app.add_route("/api/lineage/{adr_id}", api_lineage_endpoint, methods=["GET"])
